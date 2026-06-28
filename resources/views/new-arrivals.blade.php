@@ -55,7 +55,7 @@
                     <div class="product-img">
                         <span class="product-badge">BARU</span>
                         @if($p->image)
-                            <img src="{{ asset('storage/' . $p->image) }}" alt="{{ $p->name }}">
+                            <img src="{{ str_starts_with($p->image, 'http') ? $p->image : asset('storage/' . $p->image) }}" alt="{{ $p->name }}">
                         @else
                             <div class="product-img-placeholder"><span>{{ mb_substr($p->name, 0, 2) }}</span></div>
                         @endif
