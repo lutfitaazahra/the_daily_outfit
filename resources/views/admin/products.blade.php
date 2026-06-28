@@ -119,7 +119,7 @@
             <tr>
                 <td>
                     @if($p->image)
-                    <img src="{{ asset('storage/' . $p->image) }}" style="width:48px; height:48px; object-fit:cover; border-radius:10px;">
+                    <img src="{{ str_starts_with($p->image, 'http') ? $p->image : asset('storage/' . $p->image) }}" style="width:48px; height:48px; object-fit:cover; border-radius:10px;">
                     @else
                     <div style="width:48px; height:48px; background:#fff0f3; border-radius:10px; display:flex; align-items:center; justify-content:center; font-weight:700; color:#c94f7c; font-size:13px;">
                         {{ mb_substr($p->name, 0, 2) }}

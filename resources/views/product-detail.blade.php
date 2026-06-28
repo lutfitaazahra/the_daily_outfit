@@ -10,19 +10,14 @@
     $colors = $product->sizes->whereNotNull('color')->where('stock', '>', 0);
     $variants = $isAccessory ? $product->sizes->where('stock', '>', 0) : collect();
 
-    // Parse Markdown sederhana ke HTML
     function parseDesc($text) {
-        $text = e($text); // escape HTML dulu biar aman
+        $text = e($text);
 
-        // Heading ## dan ###
         $text = preg_replace('/^### (.+)$/m', '<h4 style="font-size:14px;font-weight:700;color:var(--brown);margin:1rem 0 0.5rem;">$1</h4>', $text);
         $text = preg_replace('/^## (.+)$/m', '<h3 style="font-size:16px;font-weight:700;color:var(--brown);margin:1.25rem 0 0.5rem;">$1</h3>', $text);
 
-        // Bold **text**
         $text = preg_replace('/\*\*(.+?)\*\*/', '<strong>$1</strong>', $text);
 
-        // Tabel markdown: baris yang ada | ... |
-        // Pisahkan per baris dulu
         $lines = explode("\n", $text);
         $output = '';
         $inTable = false;
@@ -32,9 +27,7 @@
         foreach ($lines as $i => $line) {
             $trimmed = trim($line);
 
-            // Deteksi baris tabel
             if (strpos($trimmed, '|') !== false) {
-                // Skip baris separator (---|---)
                 if (preg_match('/^\|[\s\-\|]+\|$/', $trimmed)) {
                     $isHeader = false;
                     continue;
@@ -46,7 +39,6 @@
                     $tableHtml = '<div style="overflow-x:auto;margin:1rem 0;"><table style="width:100%;border-collapse:collapse;font-size:13px;">';
                 }
 
-                // Parse kolom
                 $cols = array_map('trim', explode('|', trim($trimmed, '|')));
                 $tag = $isHeader ? 'th' : 'td';
                 $style = $isHeader
@@ -60,7 +52,6 @@
                 $tableHtml .= '</tr>';
 
             } else {
-                // Tutup tabel kalau ada
                 if ($inTable) {
                     $output .= $tableHtml . '</table></div>';
                     $inTable = false;
@@ -68,7 +59,6 @@
                     $isHeader = true;
                 }
 
-                // Baris bullet * atau -
                 if (preg_match('/^\* (.+)$/', $trimmed, $m)) {
                     $output .= '<li style="font-size:14px;color:var(--gray-600);line-height:1.8;margin-left:1rem;">' . $m[1] . '</li>';
                 } elseif (preg_match('/^- (.+)$/', $trimmed, $m)) {
@@ -76,7 +66,6 @@
                 } elseif ($trimmed === '') {
                     $output .= '<br>';
                 } else {
-                    // Kalau tidak diawali tag HTML (heading sudah jadi tag)
                     if (substr($trimmed, 0, 1) === '<') {
                         $output .= $trimmed;
                     } else {
@@ -86,7 +75,6 @@
             }
         }
 
-        // Tutup tabel kalau masih terbuka
         if ($inTable) {
             $output .= $tableHtml . '</table></div>';
         }
@@ -119,7 +107,7 @@
             <!-- FOTO PRODUK -->
             <div style="border-radius:var(--radius); overflow:hidden; background:var(--pink-50); aspect-ratio:3/4;">
                 @if($product->image)
-                    <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}"
+                    <img src="{{ str_starts_with($product->image, 'http') ? $product->image : asset('storage/' . $product->image) }}" alt="{{ $product->name }}"
                          style="width:100%; height:100%; object-fit:cover;">
                 @else
                     <div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center;

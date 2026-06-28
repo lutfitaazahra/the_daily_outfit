@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\Category;
 use App\Models\ProductSize;
+use App\Helpers\CloudinaryHelper;
 use Illuminate\Http\Request;
 
 class ProductController extends Controller
@@ -28,7 +29,7 @@ class ProductController extends Controller
 
         $image = '';
         if ($request->hasFile('image')) {
-            $image = $request->file('image')->store('products', 'public');
+            $image = CloudinaryHelper::upload($request->file('image')->getRealPath(), 'products');
         }
 
         $product = Product::create([
@@ -117,11 +118,10 @@ class ProductController extends Controller
         ];
 
         if ($request->hasFile('image')) {
-            $data['image'] = $request->file('image')->store('products', 'public');
+            $data['image'] = CloudinaryHelper::upload($request->file('image')->getRealPath(), 'products');
         }
 
         $product->update($data);
-      
 
         $category    = Category::find($request->category_id);
         $isAccessory = $category && $category->slug === 'accessories';

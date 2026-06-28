@@ -38,8 +38,6 @@
 <!-- TOOLBAR -->
 <div style="padding: 1.25rem 2rem; background: #fafafa; border-bottom: 1px solid #e5e5e5;">
     <div class="container" style="display:flex; align-items:center; justify-content:flex-end; flex-wrap:wrap; gap:1rem;">
-
-        <!-- Sort -->
         <div style="display:flex; align-items:center; gap:8px;">
             <span style="font-size:13px; color:#525252;">Urutkan:</span>
             <div style="display:flex; gap:6px;">
@@ -52,7 +50,6 @@
                 @endforeach
             </div>
         </div>
-
     </div>
 </div>
 
@@ -72,7 +69,7 @@
                 <a href="{{ route('product.detail', $p->id) }}">
                     <div class="product-img">
                         @if($p->image)
-                            <img src="{{ asset('storage/' . $p->image) }}" alt="{{ $p->name }}">
+                            <img src="{{ str_starts_with($p->image, 'http') ? $p->image : asset('storage/' . $p->image) }}" alt="{{ $p->name }}">
                         @else
                             <div class="product-img-placeholder"><span>{{ mb_substr($p->name, 0, 2) }}</span></div>
                         @endif

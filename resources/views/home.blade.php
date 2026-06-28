@@ -145,9 +145,9 @@
                     <div class="product-img">
                         <span class="product-badge">BARU</span>
                         @if($p->image)
-                            <img src="{{ asset('storage/' . $p->image) }}" alt="{{ $p->name }}">
+                            <img src="{{ str_starts_with($p->image, 'http') ? $p->image : asset('storage/' . $p->image) }}" alt="{{ $p->name }}">
                         @else
-                        <img src="https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=1600&q=90" alt="{{ $p->name }}">
+                            <img src="https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=1600&q=90" alt="{{ $p->name }}">
                         @endif
                         <a href="{{ route('product.detail', $p->id) }}" class="product-add-overlay">Tambah ke Keranjang</a>
                     </div>
