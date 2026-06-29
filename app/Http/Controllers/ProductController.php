@@ -48,9 +48,17 @@ class ProductController extends Controller
         return view('shop', compact('products', 'categories'));
     }
 
-    public function newArrivals()
+    public function newArrivals(Request $request)
     {
-        $products   = Product::with('category')->latest()->limit(12)->get();
+        $query = Product::with('category')->latest();
+
+        if ($request->category && $request->category !== 'all') {
+            $query->whereHas('category', function($q) use ($request) {
+                $q->where('slug', $request->category);
+            });
+        }
+
+        $products   = $query->limit(12)->get();
         $categories = Category::all();
 
         return view('new-arrivals', compact('products', 'categories'));
