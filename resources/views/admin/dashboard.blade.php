@@ -86,7 +86,7 @@
                     {{ $i + 1 }}
                 </div>
                 @if($p->image)
-                <img src="{{ asset('storage/' . $p->image) }}" style="width:40px; height:40px; object-fit:cover; border-radius:8px; flex-shrink:0;">
+                <img src="{{ str_starts_with($p->image, 'http') ? $p->image : asset('storage/' . $p->image) }}" style="width:40px; height:40px; object-fit:cover; border-radius:8px; flex-shrink:0;">
                 @else
                 <div style="width:40px; height:40px; background:#fff0f3; border-radius:8px; display:flex; align-items:center; justify-content:center; font-weight:700; color:#c94f7c; font-size:11px; flex-shrink:0;">
                     {{ mb_substr($p->name, 0, 2) }}
@@ -115,7 +115,7 @@
             @forelse($low_stock as $p)
             <div style="display:flex; align-items:center; gap:12px; padding:10px 0; {{ !$loop->last ? 'border-bottom:1px solid #fdf0f3;' : '' }}">
                 @if($p->image)
-                <img src="{{ asset('storage/' . $p->image) }}" style="width:40px; height:40px; object-fit:cover; border-radius:8px; flex-shrink:0;">
+                <img src="{{ str_starts_with($p->image, 'http') ? $p->image : asset('storage/' . $p->image) }}" style="width:40px; height:40px; object-fit:cover; border-radius:8px; flex-shrink:0;">
                 @else
                 <div style="width:40px; height:40px; background:#fff0f3; border-radius:8px; display:flex; align-items:center; justify-content:center; font-weight:700; color:#c94f7c; font-size:11px; flex-shrink:0;">
                     {{ mb_substr($p->name, 0, 2) }}

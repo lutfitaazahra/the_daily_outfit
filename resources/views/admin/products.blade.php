@@ -31,67 +31,106 @@
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.25rem;">
             <div>
                 <label style="display:block; font-size:12px; font-weight:600; color:#9a8a8e; text-transform:uppercase; letter-spacing:1px; margin-bottom:6px;">Nama Produk</label>
-                <input type="text" name="name" required style="width:100%; padding:10px 14px; border:1px solid #f0dde2; border-radius:10px; font-size:14px;">
+                <input type="text" name="name" required style="width:100%; padding:10px 14px; border:1px solid #f0dde2; border-radius:10px; font-size:14px; box-sizing:border-box;">
             </div>
             <div>
                 <label style="display:block; font-size:12px; font-weight:600; color:#9a8a8e; text-transform:uppercase; letter-spacing:1px; margin-bottom:6px;">Kategori</label>
-                <select name="category_id" style="width:100%; padding:10px 14px; border:1px solid #f0dde2; border-radius:10px; font-size:14px; background:white;">
+                <select name="category_id" id="add_category_select" onchange="toggleAddSection()" style="width:100%; padding:10px 14px; border:1px solid #f0dde2; border-radius:10px; font-size:14px; background:white; box-sizing:border-box;">
                     @foreach($categories as $cat)
-                    <option value="{{ $cat->id }}">{{ $cat->name }}</option>
+                    <option value="{{ $cat->id }}" data-slug="{{ $cat->slug }}">{{ $cat->name }}</option>
                     @endforeach
                 </select>
             </div>
             <div style="grid-column:span 2;">
                 <label style="display:block; font-size:12px; font-weight:600; color:#9a8a8e; text-transform:uppercase; letter-spacing:1px; margin-bottom:6px;">Deskripsi</label>
-                <textarea name="description" rows="3" style="width:100%; padding:10px 14px; border:1px solid #f0dde2; border-radius:10px; font-size:14px; resize:vertical;"></textarea>
+                <textarea name="description" rows="3" style="width:100%; padding:10px 14px; border:1px solid #f0dde2; border-radius:10px; font-size:14px; resize:vertical; box-sizing:border-box;"></textarea>
             </div>
             <div>
                 <label style="display:block; font-size:12px; font-weight:600; color:#9a8a8e; text-transform:uppercase; letter-spacing:1px; margin-bottom:6px;">Harga (Rp)</label>
-                <input type="number" name="price" min="0" required style="width:100%; padding:10px 14px; border:1px solid #f0dde2; border-radius:10px; font-size:14px;">
-            </div>
-            <div>
-                <label style="display:block; font-size:12px; font-weight:600; color:#9a8a8e; text-transform:uppercase; letter-spacing:1px; margin-bottom:6px;">Total Stok</label>
-                <input type="number" name="stock" min="0" value="0" style="width:100%; padding:10px 14px; border:1px solid #f0dde2; border-radius:10px; font-size:14px;">
-            </div>
-
-            <!-- STOK PER UKURAN -->
-            <div style="grid-column:span 2;">
-                <label style="display:block; font-size:12px; font-weight:600; color:#9a8a8e; text-transform:uppercase; letter-spacing:1px; margin-bottom:8px;">Stok per Ukuran</label>
-                <div style="display:flex; gap:1rem; flex-wrap:wrap; margin-bottom:1.5rem;">
-                    @foreach(['S','M','L','XL'] as $sz)
-                    <div style="display:flex; flex-direction:column; align-items:center; gap:4px;">
-                        <span style="font-size:12px; font-weight:600; color:var(--brown);">{{ $sz }}</span>
-                        <input type="number" name="size_{{ $sz }}" value="0" min="0" style="width:60px; padding:8px; text-align:center; border:1px solid #f0dde2; border-radius:8px;">
-                    </div>
-                    @endforeach
-                </div>
-
-                <!-- STOK PER WARNA -->
-                <label style="display:block; font-size:12px; font-weight:600; color:#9a8a8e; text-transform:uppercase; letter-spacing:1px; margin-bottom:8px;">Stok per Warna</label>
-                <div id="add-color-rows" style="display:flex; flex-direction:column; gap:10px; margin-bottom:10px;">
-                    <div class="color-row" style="display:flex; gap:10px; align-items:center;">
-                        <input type="text" name="color_name[]" placeholder="Nama warna (cth: Dusty Pink)"
-                               style="flex:1; padding:9px 14px; border:1px solid #f0dde2; border-radius:8px; font-size:13px;">
-                        <input type="number" name="color_stock[]" min="0" placeholder="Stok"
-                               style="width:90px; padding:9px 14px; border:1px solid #f0dde2; border-radius:8px; font-size:13px; text-align:center;">
-                        <button type="button" onclick="this.parentElement.remove()"
-                                style="background:#fef2f2; color:#dc2626; border:1px solid #fecaca; border-radius:8px; width:36px; height:36px; cursor:pointer; font-size:14px;">×</button>
-                    </div>
-                </div>
-                <button type="button" onclick="addColorRowAdd()" class="abtn abtn-outline" style="padding:8px 16px; font-size:12px;">+ Tambah Warna</button>
-                <p style="font-size:12px; color:#b09098; margin-top:8px;">Kosongkan nama warna untuk baris yang tidak dipakai.</p>
-            </div>
-
-            <div>
-                <label style="display:block; font-size:12px; font-weight:600; color:#9a8a8e; text-transform:uppercase; letter-spacing:1px; margin-bottom:6px;">Foto Produk</label>
-                <input type="file" name="image" accept="image/*" style="width:100%; padding:8px; border:1px solid #f0dde2; border-radius:10px; font-size:13px;">
+                <input type="number" name="price" min="0" required style="width:100%; padding:10px 14px; border:1px solid #f0dde2; border-radius:10px; font-size:14px; box-sizing:border-box;">
             </div>
             <div style="display:flex; align-items:center; padding-top:1.5rem;">
                 <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:14px; color:var(--brown);">
                     <input type="checkbox" name="is_featured" value="1"> Tampilkan di Halaman Utama
                 </label>
             </div>
+
+            <!-- STOK KOMBINASI (BAJU) -->
+            <div style="grid-column:span 2;" id="add-section-clothing">
+                <label style="display:block; font-size:12px; font-weight:600; color:#9a8a8e; text-transform:uppercase; letter-spacing:1px; margin-bottom:8px;">
+                    Stok per Ukuran & Warna
+                </label>
+                <p style="font-size:12px; color:#b09098; margin-bottom:10px;">Setiap baris = 1 kombinasi ukuran + warna + stok.</p>
+
+                <div style="display:grid; grid-template-columns:90px 1fr 80px 36px; gap:8px; padding:0 12px; margin-bottom:6px;">
+                    <span style="font-size:10px; font-weight:700; color:#b09098; text-transform:uppercase;">Ukuran</span>
+                    <span style="font-size:10px; font-weight:700; color:#b09098; text-transform:uppercase;">Warna</span>
+                    <span style="font-size:10px; font-weight:700; color:#b09098; text-transform:uppercase; text-align:center;">Stok</span>
+                    <span></span>
+                </div>
+
+                <div id="add-combo-rows" style="display:flex; flex-direction:column; gap:8px; margin-bottom:10px;">
+                    <div style="display:grid; grid-template-columns:90px 1fr 80px 36px; gap:8px; align-items:center; background:#fff8f9; border:1.5px solid #f0dde2; border-radius:10px; padding:8px 12px;">
+                        <select name="combo_size[]" style="border:none; background:transparent; font-size:13px; color:#4a3840; padding:4px 2px; width:100%;">
+                            <option value="">-</option>
+                            <option>S</option><option>M</option><option>L</option>
+                            <option>XL</option><option>XXL</option><option>Free Size</option>
+                        </select>
+                        <input type="text" name="combo_color[]" placeholder="cth: Dusty Pink"
+                               style="border:none; background:transparent; font-size:13px; color:#4a3840; padding:4px 2px; width:100%;">
+                        <input type="number" name="combo_stock[]" min="0" placeholder="0"
+                               style="text-align:center; font-weight:600; border:none; background:transparent; font-size:13px; color:#4a3840; padding:4px 2px; width:100%;">
+                        <button type="button" onclick="this.closest('div[style]').remove()"
+                                style="background:none; border:none; color:#e0a0b0; cursor:pointer; font-size:18px; line-height:1; padding:0; text-align:center;">×</button>
+                    </div>
+                </div>
+                <button type="button" onclick="addComboRowAdd()" class="abtn abtn-outline" style="padding:8px 16px; font-size:12px;">+ Tambah Kombinasi</button>
+                <div style="margin-top:10px; padding:10px 14px; background:#fff0f3; border-radius:8px; font-size:12px; color:#c94f7c;">
+                    💡 <strong>Contoh:</strong> S + Dusty Pink = 10 pcs, M + Hitam = 15 pcs
+                </div>
+            </div>
+
+            <!-- AKSESORIS -->
+            <div style="grid-column:span 2; display:none;" id="add-section-accessories">
+                <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:13px; font-weight:600; color:var(--brown); margin-bottom:14px;">
+                    <input type="checkbox" id="add_has_variants" name="accessory_has_variants" value="1" onchange="toggleAddAccessoryMode()">
+                    Aktifkan Varian Warna (misal: Gold / Silver / Rose Gold)
+                </label>
+
+                <!-- MODE: FIX PINK -->
+                <div id="add-accessory-fixed">
+                    <label style="display:block; font-size:12px; font-weight:600; color:#9a8a8e; text-transform:uppercase; letter-spacing:1px; margin-bottom:8px;">
+                        Stok Produk <span style="color:#c94f7c;">(Warna: Pink)</span>
+                    </label>
+                    <input type="number" name="accessory_stock" value="0" min="0"
+                           style="width:140px; padding:10px 14px; border:1.5px solid #f0dde2; border-radius:10px; font-size:14px; box-sizing:border-box;">
+                    <p style="font-size:12px; color:#b09098; margin-top:8px;">
+                        Produk ini tidak punya pilihan varian warna lain — fix Pink.
+                    </p>
+                </div>
+
+                <!-- MODE: VARIAN -->
+                <div id="add-accessory-variants" style="display:none;">
+                    <label style="display:block; font-size:12px; font-weight:600; color:#9a8a8e; text-transform:uppercase; letter-spacing:1px; margin-bottom:8px;">Stok per Varian</label>
+                    <div style="display:flex; gap:1rem; flex-wrap:wrap;">
+                        @foreach(['Gold','Silver','Rose Gold'] as $v)
+                        <div style="display:flex; flex-direction:column; align-items:center; gap:4px; background:#fff8f9; border:1.5px solid #f0dde2; border-radius:12px; padding:12px 10px; min-width:70px;">
+                            <span style="font-size:11px; font-weight:700; color:#c94f7c;">{{ $v }}</span>
+                            <input type="number" name="variant_{{ str_replace(' ', '_', $v) }}" value="0" min="0"
+                                   style="width:60px; padding:6px; text-align:center; border:1px solid #f0dde2; border-radius:8px; font-size:14px;">
+                        </div>
+                        @endforeach
+                    </div>
+                    <p style="font-size:12px; color:#b09098; margin-top:10px;">Isi 0 jika varian tidak tersedia.</p>
+                </div>
+            </div>
+
+            <div>
+                <label style="display:block; font-size:12px; font-weight:600; color:#9a8a8e; text-transform:uppercase; letter-spacing:1px; margin-bottom:6px;">Foto Produk</label>
+                <input type="file" name="image" accept="image/*" style="width:100%; padding:8px; border:1px solid #f0dde2; border-radius:10px; font-size:13px;">
+            </div>
         </div>
+
         <div style="margin-top:1.25rem; display:flex; gap:10px;">
             <button type="submit" class="abtn abtn-pink" style="padding:12px 28px;">Simpan Produk</button>
             <button type="button" onclick="document.getElementById('addForm').style.display='none'" class="abtn abtn-outline" style="padding:12px 28px;">Batal</button>
@@ -148,20 +187,39 @@
 </div>
 
 <script>
-function addColorRowAdd() {
-    const container = document.getElementById('add-color-rows');
+function addComboRowAdd() {
+    const container = document.getElementById('add-combo-rows');
     const row = document.createElement('div');
-    row.className = 'color-row';
-    row.style.cssText = 'display:flex; gap:10px; align-items:center;';
+    row.style.cssText = 'display:grid; grid-template-columns:90px 1fr 80px 36px; gap:8px; align-items:center; background:#fff8f9; border:1.5px solid #f0dde2; border-radius:10px; padding:8px 12px;';
     row.innerHTML = `
-        <input type="text" name="color_name[]" placeholder="Nama warna (cth: Dusty Pink)"
-               style="flex:1; padding:9px 14px; border:1px solid #f0dde2; border-radius:8px; font-size:13px;">
-        <input type="number" name="color_stock[]" min="0" placeholder="Stok"
-               style="width:90px; padding:9px 14px; border:1px solid #f0dde2; border-radius:8px; font-size:13px; text-align:center;">
-        <button type="button" onclick="this.parentElement.remove()"
-                style="background:#fef2f2; color:#dc2626; border:1px solid #fecaca; border-radius:8px; width:36px; height:36px; cursor:pointer; font-size:14px;">×</button>
+        <select name="combo_size[]" style="border:none; background:transparent; font-size:13px; color:#4a3840; padding:4px 2px; width:100%;">
+            <option value="">-</option>
+            <option>S</option><option>M</option><option>L</option>
+            <option>XL</option><option>XXL</option><option>Free Size</option>
+        </select>
+        <input type="text" name="combo_color[]" placeholder="cth: Dusty Pink"
+               style="border:none; background:transparent; font-size:13px; color:#4a3840; padding:4px 2px; width:100%;">
+        <input type="number" name="combo_stock[]" min="0" placeholder="0"
+               style="text-align:center; font-weight:600; border:none; background:transparent; font-size:13px; color:#4a3840; padding:4px 2px; width:100%;">
+        <button type="button" onclick="this.closest('div').remove()"
+                style="background:none; border:none; color:#e0a0b0; cursor:pointer; font-size:18px; line-height:1; padding:0; text-align:center;">×</button>
     `;
     container.appendChild(row);
+}
+
+function toggleAddSection() {
+    const select = document.getElementById('add_category_select');
+    const selected = select.options[select.selectedIndex];
+    const slug = selected.getAttribute('data-slug');
+    const isAccessory = slug === 'accessories';
+    document.getElementById('add-section-clothing').style.display = isAccessory ? 'none' : 'block';
+    document.getElementById('add-section-accessories').style.display = isAccessory ? 'block' : 'none';
+}
+
+function toggleAddAccessoryMode() {
+    const checked = document.getElementById('add_has_variants').checked;
+    document.getElementById('add-accessory-fixed').style.display = checked ? 'none' : 'block';
+    document.getElementById('add-accessory-variants').style.display = checked ? 'block' : 'none';
 }
 </script>
 

@@ -11,6 +11,8 @@ use Illuminate\Http\Request;
 
 class ProductController extends Controller
 {
+    private array $accessoryVariants = ['Gold', 'Silver', 'Rose Gold'];
+
     public function index()
     {
         $products   = Product::with('category')->latest()->get();
@@ -24,7 +26,6 @@ class ProductController extends Controller
             'name'        => 'required|string|max:200',
             'category_id' => 'required|exists:categories,id',
             'price'       => 'required|numeric|min:0',
-            'stock'       => 'required|integer|min:0',
         ]);
 
         $image = '';
@@ -32,61 +33,25 @@ class ProductController extends Controller
             $image = CloudinaryHelper::upload($request->file('image')->getRealPath(), 'products');
         }
 
-        $product = Product::create([
-            'category_id' => $request->category_id,
-            'name'        => $request->name,
-            'slug'        => str()->slug($request->name),
-            'description' => $request->description,
-            'price'       => $request->price,
-            'stock'       => $request->stock,
-            'image'       => $image,
-            'is_featured' => $request->has('is_featured') ? 1 : 0,
-        ]);
-
         $category    = Category::find($request->category_id);
         $isAccessory = $category && $category->slug === 'accessories';
+        $hasVariants = $isAccessory && $request->has('accessory_has_variants');
 
-        if ($isAccessory) {
-            foreach (['Gold', 'Silver', 'Hitam', 'Putih', 'Rose Gold'] as $variant) {
-                $stock = (int)($request->{'size_' . $variant} ?? 0);
-                if ($stock > 0) {
-                    ProductSize::create([
-                        'product_id' => $product->id,
-                        'size'       => $variant,
-                        'stock'      => $stock,
-                        'color'      => null,
-                    ]);
-                }
-            }
-        } else {
-            foreach (['S', 'M', 'L', 'XL'] as $size) {
-                $stock = (int)($request->{'size_' . $size} ?? 0);
-                if ($stock > 0) {
-                    ProductSize::create([
-                        'product_id' => $product->id,
-                        'size'       => $size,
-                        'stock'      => $stock,
-                        'color'      => null,
-                    ]);
-                }
-            }
+        $product = Product::create([
+            'category_id'  => $request->category_id,
+            'name'         => $request->name,
+            'slug'         => str()->slug($request->name),
+            'description'  => $request->description,
+            'price'        => $request->price,
+            'stock'        => 0,
+            'image'        => $image,
+            'is_featured'  => $request->has('is_featured') ? 1 : 0,
+            'has_variants' => $hasVariants,
+        ]);
 
-            $colorNames  = $request->input('color_name', []);
-            $colorStocks = $request->input('color_stock', []);
+        $totalStock = $this->saveStockRows($request, $product, $isAccessory, $hasVariants);
 
-            foreach ($colorNames as $i => $colorName) {
-                $colorName = trim($colorName);
-                $stock     = (int)($colorStocks[$i] ?? 0);
-                if ($colorName !== '') {
-                    ProductSize::create([
-                        'product_id' => $product->id,
-                        'size'       => null,
-                        'stock'      => $stock,
-                        'color'      => $colorName,
-                    ]);
-                }
-            }
-        }
+        $product->update(['stock' => $totalStock]);
 
         return back()->with('success', 'Produk berhasil ditambahkan!');
     }
@@ -104,17 +69,20 @@ class ProductController extends Controller
             'name'        => 'required|string|max:200',
             'category_id' => 'required|exists:categories,id',
             'price'       => 'required|numeric|min:0',
-            'stock'       => 'required|integer|min:0',
         ]);
 
+        $category    = Category::find($request->category_id);
+        $isAccessory = $category && $category->slug === 'accessories';
+        $hasVariants = $isAccessory && $request->has('accessory_has_variants');
+
         $data = [
-            'category_id' => $request->category_id,
-            'name'        => $request->name,
-            'slug'        => str()->slug($request->name),
-            'description' => $request->description,
-            'price'       => $request->price,
-            'stock'       => $request->stock,
-            'is_featured' => $request->has('is_featured') ? 1 : 0,
+            'category_id'  => $request->category_id,
+            'name'         => $request->name,
+            'slug'         => str()->slug($request->name),
+            'description'  => $request->description,
+            'price'        => $request->price,
+            'is_featured'  => $request->has('is_featured') ? 1 : 0,
+            'has_variants' => $hasVariants,
         ];
 
         if ($request->hasFile('image')) {
@@ -123,52 +91,11 @@ class ProductController extends Controller
 
         $product->update($data);
 
-        $category    = Category::find($request->category_id);
-        $isAccessory = $category && $category->slug === 'accessories';
-
         ProductSize::where('product_id', $product->id)->delete();
 
-        if ($isAccessory) {
-            foreach (['Gold', 'Silver', 'Hitam', 'Putih', 'Rose Gold'] as $variant) {
-                $stock = (int)($request->{'size_' . $variant} ?? 0);
-                if ($stock > 0) {
-                    ProductSize::create([
-                        'product_id' => $product->id,
-                        'size'       => $variant,
-                        'stock'      => $stock,
-                        'color'      => null,
-                    ]);
-                }
-            }
-        } else {
-            foreach (['S', 'M', 'L', 'XL'] as $size) {
-                $stock = (int)($request->{'size_' . $size} ?? 0);
-                if ($stock > 0) {
-                    ProductSize::create([
-                        'product_id' => $product->id,
-                        'size'       => $size,
-                        'stock'      => $stock,
-                        'color'      => null,
-                    ]);
-                }
-            }
+        $totalStock = $this->saveStockRows($request, $product, $isAccessory, $hasVariants);
 
-            $colorNames  = $request->input('color_name', []);
-            $colorStocks = $request->input('color_stock', []);
-
-            foreach ($colorNames as $i => $colorName) {
-                $colorName = trim($colorName);
-                $stock     = (int)($colorStocks[$i] ?? 0);
-                if ($colorName !== '') {
-                    ProductSize::create([
-                        'product_id' => $product->id,
-                        'size'       => null,
-                        'stock'      => $stock,
-                        'color'      => $colorName,
-                    ]);
-                }
-            }
-        }
+        $product->update(['stock' => $totalStock]);
 
         return redirect()->route('admin.products')->with('success', 'Produk berhasil diperbarui!');
     }
@@ -177,5 +104,61 @@ class ProductController extends Controller
     {
         $product->delete();
         return back()->with('success', 'Produk berhasil dihapus!');
+    }
+
+    /**
+     * Simpan baris ProductSize sesuai tipe produk, return total stok.
+     */
+    private function saveStockRows(Request $request, Product $product, bool $isAccessory, bool $hasVariants): int
+    {
+        $totalStock = 0;
+
+        if ($isAccessory && $hasVariants) {
+            // Aksesoris dengan varian warna (misal: perhiasan)
+            foreach ($this->accessoryVariants as $variant) {
+                $stock = (int)($request->{'variant_' . str_replace(' ', '_', $variant)} ?? 0);
+                if ($stock > 0) {
+                    ProductSize::create([
+                        'product_id' => $product->id,
+                        'size'       => $variant,
+                        'color'      => null,
+                        'stock'      => $stock,
+                    ]);
+                    $totalStock += $stock;
+                }
+            }
+        } elseif ($isAccessory) {
+            // Aksesoris fix warna Pink, tanpa varian
+            $stock = (int)($request->accessory_stock ?? 0);
+
+            ProductSize::create([
+                'product_id' => $product->id,
+                'size'       => null,
+                'color'      => 'Pink',
+                'stock'      => $stock,
+            ]);
+
+            $totalStock = $stock;
+        } else {
+            // Baju: kombinasi size + color
+            $sizes       = array_filter($request->input('combo_size', []), fn($v) => $v !== '');
+            $colors      = $request->input('combo_color', []);
+            $comboStocks = $request->input('combo_stock', []);
+
+            foreach ($sizes as $i => $size) {
+                $color = trim($colors[$i] ?? '');
+                $stock = (int)($comboStocks[$i] ?? 0);
+
+                ProductSize::create([
+                    'product_id' => $product->id,
+                    'size'       => $size ?: null,
+                    'color'      => $color ?: null,
+                    'stock'      => $stock,
+                ]);
+                $totalStock += $stock;
+            }
+        }
+
+        return $totalStock;
     }
 }
