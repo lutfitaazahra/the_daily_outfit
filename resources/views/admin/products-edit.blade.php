@@ -115,6 +115,41 @@
     border: 1px solid #f0dde2; border-radius: 8px;
     font-size: 14px; font-weight: 600; color: #4a3840; background: white;
 }
+.gen-box {
+    margin-top: 14px;
+    padding: 14px;
+    background: #fff8f9;
+    border: 1.5px dashed #f0b8c8;
+    border-radius: 10px;
+}
+.gen-box .field-label { margin-bottom: 4px; }
+.gen-box p { font-size: 11px; color: #b09098; margin: 0 0 10px; }
+.gen-mode-row {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 10px;
+    font-size: 12px;
+    color: #4a3840;
+    flex-wrap: wrap;
+}
+.gen-mode-row label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+}
+.gen-input-row {
+    display: flex;
+    gap: 8px;
+}
+.gen-input-row input[type=text] {
+    flex: 1;
+}
+.btn-generate {
+    white-space: nowrap;
+    padding: 10px 18px;
+    font-size: 12px;
+}
 </style>
 
 <div class="admin-topbar">
@@ -244,7 +279,7 @@
                     <div class="combo-row">
                         <select name="combo_size[]">
                             <option value="">-</option>
-                            @foreach(['S','M','L','XL','XXL','Free Size'] as $sz)
+                            @foreach(['S','M','L','XL','XXL','All Size'] as $sz)
                             <option value="{{ $sz }}" {{ $combo->size === $sz ? 'selected' : '' }}>{{ $sz }}</option>
                             @endforeach
                         </select>
@@ -256,7 +291,7 @@
                     <div class="combo-row">
                         <select name="combo_size[]">
                             <option value="">-</option>
-                            @foreach(['S','M','L','XL','XXL','Free Size'] as $sz)
+                            @foreach(['S','M','L','XL','XXL','All Size'] as $sz)
                             <option value="{{ $sz }}">{{ $sz }}</option>
                             @endforeach
                         </select>
@@ -267,12 +302,35 @@
                     @endforelse
                 </div>
 
-                <button type="button" onclick="addComboRow()" class="abtn abtn-outline" style="padding:7px 14px; font-size:12px; width:100%;">
-                    + Tambah Kombinasi
-                </button>
+                <div style="display:flex; gap:8px;">
+                    <button type="button" onclick="addComboRow()" class="abtn abtn-outline" style="padding:7px 14px; font-size:12px; flex:1;">
+                        + Tambah Kombinasi
+                    </button>
+                    <button type="button" onclick="fillAllSizes()" class="abtn abtn-outline" style="padding:7px 14px; font-size:12px; flex:1;">
+                        ⚡ Isi Semua Ukuran (S,M,L,XL)
+                    </button>
+                </div>
+
+                <!-- GENERATE OTOMATIS: UKURAN x WARNA -->
+                <div class="gen-box">
+                    <label class="field-label">Generate Otomatis: Ukuran × Warna</label>
+                    <p>Tulis daftar warna dipisah koma, lalu klik generate.</p>
+                    <div class="gen-mode-row">
+                        <label>
+                            <input type="radio" name="gen_size_mode" value="multi" checked> Ukuran S, M, L, XL
+                        </label>
+                        <label>
+                            <input type="radio" name="gen_size_mode" value="all"> All Size (1 ukuran saja)
+                        </label>
+                    </div>
+                    <div class="gen-input-row">
+                        <input type="text" id="gen_colors_input" class="field-input" placeholder="cth: Dusty Pink, Hitam, Navy">
+                        <button type="button" onclick="generateCombinations()" class="abtn abtn-pink btn-generate">⚡ Generate Semua Kombinasi</button>
+                    </div>
+                </div>
 
                 <div style="margin-top:14px; padding:10px 14px; background:#fff0f3; border-radius:8px; font-size:12px; color:#c94f7c;">
-                    💡 <strong>Contoh:</strong> S + Dusty Pink = 10 pcs, M + Hitam = 15 pcs, L + Dusty Pink = 8 pcs
+                    💡 <strong>Contoh:</strong> pilih "S,M,L,XL" + isi "Dusty Pink, Hitam, Navy" → 12 baris. Pilih "All Size" + warna yang sama → 3 baris (All Size + tiap warna). Tinggal isi stok masing-masing.
                 </div>
             </div>
         </div>
@@ -342,23 +400,59 @@ function previewImage(input) {
     }
 }
 
-function addComboRow() {
+function comboRowHtml(size, color, stock) {
+    size = size || '';
+    color = color || '';
+    stock = stock || 0;
+    const sizes = ['S','M','L','XL','XXL','All Size'];
+    let options = '<option value="">-</option>';
+    sizes.forEach(sz => {
+        options += `<option value="${sz}" ${sz === size ? 'selected' : ''}>${sz}</option>`;
+    });
+    return `
+        <select name="combo_size[]">${options}</select>
+        <input type="text" name="combo_color[]" value="${color}" placeholder="cth: Dusty Pink">
+        <input type="number" name="combo_stock[]" value="${stock}" min="0" placeholder="0">
+        <button type="button" onclick="this.closest('.combo-row').remove()" class="btn-remove">×</button>
+    `;
+}
+
+function addComboRow(size = '', color = '', stock = 0) {
     const container = document.getElementById('combo-rows');
     const row = document.createElement('div');
     row.className = 'combo-row';
-    row.innerHTML = `
-        <select name="combo_size[]" style="border:none; background:transparent; font-size:13px; color:#4a3840; padding:4px 2px; width:100%;">
-            <option value="">-</option>
-            <option>S</option><option>M</option><option>L</option>
-            <option>XL</option><option>XXL</option><option>Free Size</option>
-        </select>
-        <input type="text" name="combo_color[]" placeholder="cth: Dusty Pink"
-               style="border:none; background:transparent; font-size:13px; color:#4a3840; padding:4px 2px; width:100%;">
-        <input type="number" name="combo_stock[]" min="0" placeholder="0"
-               style="text-align:center; font-weight:600; border:none; background:transparent; font-size:13px; color:#4a3840; padding:4px 2px; width:100%;">
-        <button type="button" onclick="this.closest('.combo-row').remove()" class="btn-remove">×</button>
-    `;
+    row.innerHTML = comboRowHtml(size, color, stock);
     container.appendChild(row);
+    return row;
+}
+
+function fillAllSizes() {
+    const color = prompt('Warna untuk kombinasi S, M, L, XL:', '');
+    if (color === null) return;
+    const trimmed = color.trim();
+    if (!trimmed) {
+        alert('Isi dulu nama warnanya.');
+        return;
+    }
+    ['S', 'M', 'L', 'XL'].forEach(sz => addComboRow(sz, trimmed, 0));
+}
+
+function generateCombinations() {
+    const colorsRaw = document.getElementById('gen_colors_input').value;
+    const colors = colorsRaw.split(',').map(c => c.trim()).filter(c => c.length > 0);
+    if (colors.length === 0) {
+        alert('Isi dulu daftar warnanya, pisahkan dengan koma.');
+        return;
+    }
+
+    const mode = document.querySelector('input[name="gen_size_mode"]:checked').value;
+    const sizes = mode === 'all' ? ['All Size'] : ['S', 'M', 'L', 'XL'];
+
+    sizes.forEach(size => {
+        colors.forEach(color => addComboRow(size, color, 0));
+    });
+
+    document.getElementById('gen_colors_input').value = '';
 }
 
 function toggleSection() {

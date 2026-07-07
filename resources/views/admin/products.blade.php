@@ -69,36 +69,45 @@
                     <span></span>
                 </div>
 
-                <div id="add-combo-rows" style="display:flex; flex-direction:column; gap:8px; margin-bottom:10px;"></div>
-
-                <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px;">
-                    <button type="button" onclick="addComboRowAdd()" class="abtn abtn-outline" style="padding:8px 16px; font-size:12px;">+ Tambah Kombinasi</button>
-                    <button type="button" onclick="fillAllSizes()" class="abtn abtn-outline" style="padding:8px 16px; font-size:12px;">⚡ Isi Semua Ukuran (S,M,L,XL)</button>
+                <div id="add-combo-rows" style="display:flex; flex-direction:column; gap:8px; margin-bottom:10px;">
+                    <div style="display:grid; grid-template-columns:90px 1fr 80px 36px; gap:8px; align-items:center; background:#fff8f9; border:1.5px solid #f0dde2; border-radius:10px; padding:8px 12px;">
+                        <select name="combo_size[]" style="border:none; background:transparent; font-size:13px; color:#4a3840; padding:4px 2px; width:100%;">
+                            <option value="">-</option>
+                            <option>S</option><option>M</option><option>L</option>
+                            <option>XL</option><option>XXL</option><option>All Size</option>
+                        </select>
+                        <input type="text" name="combo_color[]" placeholder="cth: Dusty Pink"
+                               style="border:none; background:transparent; font-size:13px; color:#4a3840; padding:4px 2px; width:100%;">
+                        <input type="number" name="combo_stock[]" min="0" placeholder="0"
+                               style="text-align:center; font-weight:600; border:none; background:transparent; font-size:13px; color:#4a3840; padding:4px 2px; width:100%;">
+                        <button type="button" onclick="this.closest('div[style]').remove()"
+                                style="background:none; border:none; color:#e0a0b0; cursor:pointer; font-size:18px; line-height:1; padding:0; text-align:center;">×</button>
+                    </div>
                 </div>
 
-                <div style="background:#fff8f9; border:1.5px solid #f0dde2; border-radius:10px; padding:12px 14px;">
-                    <label style="display:block; font-size:11px; font-weight:700; color:#9a8a8e; text-transform:uppercase; letter-spacing:1px; margin-bottom:6px;">
+                <div style="display:flex; gap:8px;">
+                    <button type="button" onclick="addComboRowAdd()" class="abtn abtn-outline" style="padding:8px 16px; font-size:12px; flex:1;">+ Tambah Kombinasi</button>
+                    <button type="button" onclick="fillAllSizesAdd()" class="abtn abtn-outline" style="padding:8px 16px; font-size:12px; flex:1;">⚡ Isi Semua Ukuran (S,M,L,XL)</button>
+                </div>
+
+                <!-- GENERATE OTOMATIS: UKURAN x WARNA -->
+                <div style="margin-top:14px; padding:14px; background:#fff8f9; border:1.5px dashed #f0b8c8; border-radius:10px;">
+                    <label style="display:block; font-size:11px; font-weight:700; color:#9a8a8e; text-transform:uppercase; letter-spacing:1px; margin-bottom:4px;">
                         Generate Otomatis: Ukuran × Warna
                     </label>
-                    <p style="font-size:11px; color:#b09098; margin-bottom:8px;">Tulis daftar warna dipisah koma, lalu klik generate.</p>
-
-                    <div style="display:flex; gap:16px; margin-bottom:10px; flex-wrap:wrap;">
-                        <label style="display:flex; align-items:center; gap:6px; font-size:12px; color:#4a3840; cursor:pointer;">
-                            <input type="radio" name="bulk_size_mode" value="standard" checked style="accent-color:#c94f7c;">
-                            Ukuran S, M, L, XL
+                    <p style="font-size:11px; color:#b09098; margin:0 0 10px;">Tulis daftar warna dipisah koma, lalu klik generate.</p>
+                    <div style="display:flex; gap:16px; margin-bottom:10px; font-size:12px; color:#4a3840; flex-wrap:wrap;">
+                        <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+                            <input type="radio" name="add_gen_size_mode" value="multi" checked> Ukuran S, M, L, XL
                         </label>
-                        <label style="display:flex; align-items:center; gap:6px; font-size:12px; color:#4a3840; cursor:pointer;">
-                            <input type="radio" name="bulk_size_mode" value="allsize" style="accent-color:#c94f7c;">
-                            All Size (1 ukuran saja)
+                        <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+                            <input type="radio" name="add_gen_size_mode" value="all"> All Size (1 ukuran saja)
                         </label>
                     </div>
-
-                    <div style="display:flex; gap:8px; flex-wrap:wrap;">
-                        <input type="text" id="bulk_colors" placeholder="cth: Dusty Pink, Hitam, Navy"
-                               style="flex:1; min-width:200px; padding:8px 12px; border:1.5px solid #f0dde2; border-radius:8px; font-size:13px; box-sizing:border-box;">
-                        <button type="button" onclick="generateSizeColorCombos()" class="abtn abtn-pink" style="padding:8px 16px; font-size:12px; white-space:nowrap;">
-                            ⚡ Generate Semua Kombinasi
-                        </button>
+                    <div style="display:flex; gap:8px;">
+                        <input type="text" id="add_gen_colors_input" placeholder="cth: Dusty Pink, Hitam, Navy"
+                               style="flex:1; padding:10px 14px; border:1.5px solid #f0dde2; border-radius:10px; font-size:14px; box-sizing:border-box;">
+                        <button type="button" onclick="generateCombinationsAdd()" class="abtn abtn-pink" style="padding:10px 18px; font-size:12px; white-space:nowrap;">⚡ Generate Semua Kombinasi</button>
                     </div>
                 </div>
 
@@ -107,38 +116,17 @@
                 </div>
             </div>
 
-            <!-- AKSESORIS -->
+            <!-- STOK VARIAN (AKSESORIS) -->
             <div style="grid-column:span 2; display:none;" id="add-section-accessories">
-                <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:13px; font-weight:600; color:var(--brown); margin-bottom:14px;">
-                    <input type="checkbox" id="add_has_variants" name="accessory_has_variants" value="1" onchange="toggleAddAccessoryMode()">
-                    Aktifkan Varian Warna (misal: Gold / Silver / Rose Gold)
-                </label>
-
-                <!-- MODE: FIX PINK -->
-                <div id="add-accessory-fixed">
-                    <label style="display:block; font-size:12px; font-weight:600; color:#9a8a8e; text-transform:uppercase; letter-spacing:1px; margin-bottom:8px;">
-                        Stok Produk <span style="color:#c94f7c;">(Warna: Pink)</span>
-                    </label>
-                    <input type="number" name="accessory_stock" value="0" min="0"
-                           style="width:140px; padding:10px 14px; border:1.5px solid #f0dde2; border-radius:10px; font-size:14px; box-sizing:border-box;">
-                    <p style="font-size:12px; color:#b09098; margin-top:8px;">
-                        Produk ini tidak punya pilihan varian warna lain — fix Pink.
-                    </p>
-                </div>
-
-                <!-- MODE: VARIAN -->
-                <div id="add-accessory-variants" style="display:none;">
-                    <label style="display:block; font-size:12px; font-weight:600; color:#9a8a8e; text-transform:uppercase; letter-spacing:1px; margin-bottom:8px;">Stok per Varian</label>
-                    <div style="display:flex; gap:1rem; flex-wrap:wrap;">
-                        @foreach(['Gold','Silver','Rose Gold'] as $v)
-                        <div style="display:flex; flex-direction:column; align-items:center; gap:4px; background:#fff8f9; border:1.5px solid #f0dde2; border-radius:12px; padding:12px 10px; min-width:70px;">
-                            <span style="font-size:11px; font-weight:700; color:#c94f7c;">{{ $v }}</span>
-                            <input type="number" name="variant_{{ str_replace(' ', '_', $v) }}" value="0" min="0"
-                                   style="width:60px; padding:6px; text-align:center; border:1px solid #f0dde2; border-radius:8px; font-size:14px;">
-                        </div>
-                        @endforeach
+                <label style="display:block; font-size:12px; font-weight:600; color:#9a8a8e; text-transform:uppercase; letter-spacing:1px; margin-bottom:8px;">Stok per Varian</label>
+                <div style="display:flex; gap:1rem; flex-wrap:wrap;">
+                    @foreach(['Gold','Silver','Hitam','Putih','Rose Gold'] as $v)
+                    <div style="display:flex; flex-direction:column; align-items:center; gap:4px; background:#fff8f9; border:1.5px solid #f0dde2; border-radius:12px; padding:12px 10px; min-width:70px;">
+                        <span style="font-size:11px; font-weight:700; color:#c94f7c;">{{ $v }}</span>
+                        <input type="number" name="size_{{ str_replace(' ', '_', $v) }}" value="0" min="0"
+                               style="width:52px; padding:6px; text-align:center; border:1px solid #f0dde2; border-radius:8px; font-size:14px;">
                     </div>
-                    <p style="font-size:12px; color:#b09098; margin-top:10px;">Isi 0 jika varian tidak tersedia.</p>
+                    @endforeach
                 </div>
             </div>
 
@@ -204,60 +192,62 @@
 </div>
 
 <script>
-function makeComboRow(size, color) {
+function comboRowHtmlAdd(size, color, stock) {
+    size = size || '';
     color = color || '';
-    const row = document.createElement('div');
-    row.style.cssText = 'display:grid; grid-template-columns:90px 1fr 80px 36px; gap:8px; align-items:center; background:#fff8f9; border:1.5px solid #f0dde2; border-radius:10px; padding:8px 12px;';
-    row.innerHTML = `
-        <select name="combo_size[]" style="border:none; background:transparent; font-size:13px; color:#4a3840; padding:4px 2px; width:100%;">
-            <option value="">-</option>
-            <option ${size==='S'?'selected':''}>S</option>
-            <option ${size==='M'?'selected':''}>M</option>
-            <option ${size==='L'?'selected':''}>L</option>
-            <option ${size==='XL'?'selected':''}>XL</option>
-            <option ${size==='XXL'?'selected':''}>XXL</option>
-            <option ${size==='Free Size'?'selected':''}>Free Size</option>
-        </select>
-        <input type="text" name="combo_color[]" placeholder="cth: Dusty Pink" value="${color.replace(/"/g,'&quot;')}"
+    stock = stock || 0;
+    const sizes = ['S','M','L','XL','XXL','All Size'];
+    let options = '<option value="">-</option>';
+    sizes.forEach(sz => {
+        options += `<option value="${sz}" ${sz === size ? 'selected' : ''}>${sz}</option>`;
+    });
+    return `
+        <select name="combo_size[]" style="border:none; background:transparent; font-size:13px; color:#4a3840; padding:4px 2px; width:100%;">${options}</select>
+        <input type="text" name="combo_color[]" value="${color}" placeholder="cth: Dusty Pink"
                style="border:none; background:transparent; font-size:13px; color:#4a3840; padding:4px 2px; width:100%;">
-        <input type="number" name="combo_stock[]" min="0" placeholder="0"
+        <input type="number" name="combo_stock[]" value="${stock}" min="0" placeholder="0"
                style="text-align:center; font-weight:600; border:none; background:transparent; font-size:13px; color:#4a3840; padding:4px 2px; width:100%;">
-        <button type="button" onclick="this.closest('div').remove()"
+        <button type="button" onclick="this.closest('div[style]').remove()"
                 style="background:none; border:none; color:#e0a0b0; cursor:pointer; font-size:18px; line-height:1; padding:0; text-align:center;">×</button>
     `;
+}
+
+function addComboRowAdd(size = '', color = '', stock = 0) {
+    const container = document.getElementById('add-combo-rows');
+    const row = document.createElement('div');
+    row.style.cssText = 'display:grid; grid-template-columns:90px 1fr 80px 36px; gap:8px; align-items:center; background:#fff8f9; border:1.5px solid #f0dde2; border-radius:10px; padding:8px 12px;';
+    row.innerHTML = comboRowHtmlAdd(size, color, stock);
+    container.appendChild(row);
     return row;
 }
 
-function addComboRowAdd() {
-    document.getElementById('add-combo-rows').appendChild(makeComboRow('', ''));
-}
-
-function fillAllSizes() {
-    const container = document.getElementById('add-combo-rows');
-    container.innerHTML = '';
-    ['S','M','L','XL'].forEach(sz => container.appendChild(makeComboRow(sz, '')));
-}
-
-function generateSizeColorCombos() {
-    const raw = document.getElementById('bulk_colors').value.trim();
-    if (!raw) {
-        alert('Isi dulu daftar warnanya, pisahkan dengan koma. Contoh: Dusty Pink, Hitam, Navy');
+function fillAllSizesAdd() {
+    const color = prompt('Warna untuk kombinasi S, M, L, XL:', '');
+    if (color === null) return;
+    const trimmed = color.trim();
+    if (!trimmed) {
+        alert('Isi dulu nama warnanya.');
         return;
     }
-    const colors = raw.split(',').map(c => c.trim()).filter(c => c.length > 0);
+    ['S', 'M', 'L', 'XL'].forEach(sz => addComboRowAdd(sz, trimmed, 0));
+}
+
+function generateCombinationsAdd() {
+    const colorsRaw = document.getElementById('add_gen_colors_input').value;
+    const colors = colorsRaw.split(',').map(c => c.trim()).filter(c => c.length > 0);
     if (colors.length === 0) {
-        alert('Daftar warna tidak valid.');
+        alert('Isi dulu daftar warnanya, pisahkan dengan koma.');
         return;
     }
-    const mode = document.querySelector('input[name="bulk_size_mode"]:checked').value;
-    const sizes = mode === 'allsize' ? ['Free Size'] : ['S','M','L','XL'];
-    const container = document.getElementById('add-combo-rows');
-    container.innerHTML = '';
-    sizes.forEach(sz => {
-        colors.forEach(col => {
-            container.appendChild(makeComboRow(sz, col));
-        });
+
+    const mode = document.querySelector('input[name="add_gen_size_mode"]:checked').value;
+    const sizes = mode === 'all' ? ['All Size'] : ['S', 'M', 'L', 'XL'];
+
+    sizes.forEach(size => {
+        colors.forEach(color => addComboRowAdd(size, color, 0));
     });
+
+    document.getElementById('add_gen_colors_input').value = '';
 }
 
 function toggleAddSection() {
@@ -267,12 +257,6 @@ function toggleAddSection() {
     const isAccessory = slug === 'accessories';
     document.getElementById('add-section-clothing').style.display = isAccessory ? 'none' : 'block';
     document.getElementById('add-section-accessories').style.display = isAccessory ? 'block' : 'none';
-}
-
-function toggleAddAccessoryMode() {
-    const checked = document.getElementById('add_has_variants').checked;
-    document.getElementById('add-accessory-fixed').style.display = checked ? 'none' : 'block';
-    document.getElementById('add-accessory-variants').style.display = checked ? 'block' : 'none';
 }
 </script>
 
