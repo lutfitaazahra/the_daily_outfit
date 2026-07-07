@@ -6,20 +6,20 @@
 
 @php
     $isAccessory = $product->category && $product->category->slug === 'accessories';
-    $hasVariants = (bool) $product->has_variants;
 
-    $allVariants = $product->sizes;
+    // Kumpulkan semua kombinasi dari product_sizes
+    $allVariants = $product->sizes; // koleksi semua baris
 
+    // Untuk baju: ambil ukuran unik dan warna unik
     $uniqueSizes  = $allVariants->whereNotNull('size')->pluck('size')->unique()->values();
     $uniqueColors = $allVariants->whereNotNull('color')->pluck('color')->unique()->values();
 
+    // Build stock map: "size||color" => stock (untuk JS)
     $stockMap = [];
     foreach ($allVariants as $v) {
         $key = ($v->size ?? '') . '||' . ($v->color ?? '');
         $stockMap[$key] = $v->stock;
     }
-
-    $accessoryStock = ($isAccessory && !$hasVariants) ? $allVariants->sum('stock') : 0;
 
     function parseDesc($text) {
         $text = e($text);
@@ -88,10 +88,6 @@
         'Cokelat'=>'#92400e','Kopi'=>'#6f4e37','Khaki'=>'#c3b091','Tan'=>'#d2b48c',
         'Baby Pink'=>'#ffb6c1','Soft Blue'=>'#aec6cf','Soft Pink'=>'#ffb6c1',
         'Soft Green'=>'#b5ead7','Baby Blue'=>'#aec6cf','Coksu'=>'#8B7355',
-        'Brown'=>'#92400e','Blue'=>'#3b82f6','Ivory'=>'#fffff0','Peach'=>'#ffcba4',
-        'Ice Blue'=>'#a5d8e6','Green'=>'#22c55e','Yellow'=>'#fbbf24','Purple'=>'#a855f7',
-        'Black'=>'#1a1a1a','White'=>'#f5f5f5','Red'=>'#dc2626','Gray'=>'#9ca3af',
-        'Biru Tua'=>'#1e3a5f','Biru Muda'=>'#7dd3fc',
     ];
 @endphp
 
@@ -152,8 +148,8 @@
                     @csrf
                     <input type="hidden" name="product_id" value="{{ $product->id }}">
 
-                    @if($isAccessory && $hasVariants)
-                        {{-- AKSESORIS DENGAN VARIAN (perhiasan: Gold/Silver/Rose Gold) --}}
+                    @if($isAccessory)
+                        {{-- AKSESORIS: pilih varian atau langsung beli --}}
                         @php $accessoryVariants = $allVariants->where('stock', '>', 0); @endphp
                         @if($accessoryVariants->count() > 0)
                         <div style="margin-bottom:1.5rem;">
@@ -161,8 +157,7 @@
                             <div style="display:flex; gap:10px; flex-wrap:wrap;">
                                 @foreach($accessoryVariants as $variant)
                                 <label style="cursor:pointer;">
-                                    <input type="radio" name="size" value="{{ $variant->size }}" style="display:none;"
-                                           onchange="onAccessoryVariantChange()" {{ $loop->first ? 'checked' : '' }}>
+                                    <input type="radio" name="size" value="{{ $variant->size }}" style="display:none;" {{ $loop->first ? 'checked' : '' }}>
                                     <span class="size-option" style="display:inline-flex; align-items:center; justify-content:center; padding:8px 16px; border-radius:8px; border:1.5px solid var(--gray-200); font-size:13px; font-weight:600; transition:all 0.2s;">
                                         {{ $variant->size }}
                                         <span style="font-size:11px; color:var(--gray-400); margin-left:4px;">({{ $variant->stock }})</span>
@@ -171,19 +166,16 @@
                                 @endforeach
                             </div>
                         </div>
-                        <input type="hidden" name="color" value="">
                         @else
+                        {{-- Tidak ada varian, langsung beli --}}
                         <input type="hidden" name="size" value="One Size">
+                        <p style="font-size:13px; color:var(--gray-600); margin-bottom:1.5rem;">
+                            Stok tersedia: <strong>{{ $product->stock }}</strong>
+                        </p>
                         @endif
-
-                    @elseif($isAccessory)
-                        {{-- AKSESORIS FIX WARNA PINK, TANPA VARIAN --}}
-                        <input type="hidden" name="size" value="">
-                        <input type="hidden" name="color" value="Pink">
 
                     @else
                         {{-- BAJU: pilih ukuran dulu, lalu warna muncul sesuai --}}
-
                         @if($uniqueSizes->count() > 0)
                         <div style="margin-bottom:1.5rem;">
                             <p style="font-size:13px; font-weight:600; margin-bottom:0.75rem; color:var(--gray-800);">Pilih Ukuran</p>
@@ -193,7 +185,7 @@
                                     <input type="radio" name="size" value="{{ $sz }}" style="display:none;"
                                            onchange="onSizeChange('{{ $sz }}')" {{ $loop->first ? 'checked' : '' }}>
                                     <span class="size-option" style="display:inline-flex; align-items:center; justify-content:center; width:44px; height:44px; border-radius:8px; border:1.5px solid var(--gray-200); font-size:13px; font-weight:600; transition:all 0.2s;">
-                                        {{ $sz === 'Free Size' ? 'All Size' : $sz }}
+                                        {{ $sz }}
                                     </span>
                                 </label>
                                 @endforeach
@@ -241,27 +233,18 @@
                         </div>
                     </div>
 
-                    <!-- INFO STOK -->
+                    <!-- INFO STOK DINAMIS -->
                     <div id="stock-info" style="font-size:13px; color:var(--gray-600); margin-bottom:1.5rem;">
-                        @if($isAccessory && !$hasVariants)
-                            Stok tersedia:
-                            <strong id="stock-count" style="color:{{ $accessoryStock <= 5 ? '#f59e0b' : 'var(--gray-800)' }};">
-                                {{ $accessoryStock > 0 ? $accessoryStock . ' pcs' : 'Habis' }}
-                            </strong>
-                        @else
-                            Stok tersedia: <strong id="stock-count">—</strong>
-                        @endif
+                        Stok tersedia: <strong id="stock-count">—</strong>
                     </div>
 
                     <div style="display:flex; gap:12px; flex-wrap:wrap;">
                         <button type="submit" formaction="{{ route('cart.add') }}" id="btn-cart"
-                                class="btn btn-outline" style="flex:1; justify-content:center; padding:14px;"
-                                @if($isAccessory && !$hasVariants && $accessoryStock <= 0) disabled style="opacity:0.4;" @endif>
+                                class="btn btn-outline" style="flex:1; justify-content:center; padding:14px;">
                             Tambah ke Keranjang
                         </button>
                         <button type="submit" formaction="{{ route('buy.now') }}" id="btn-buy"
-                                class="btn btn-dark" style="flex:1; justify-content:center; padding:14px;"
-                                @if($isAccessory && !$hasVariants && $accessoryStock <= 0) disabled style="opacity:0.4;" @endif>
+                                class="btn btn-dark" style="flex:1; justify-content:center; padding:14px;">
                             Beli Sekarang
                         </button>
                     </div>
@@ -318,8 +301,8 @@ input[type="radio"]:checked + .color-option span:first-child {
 </style>
 
 <script>
-// Stock map dari PHP: key = "size||color", value = stock
 const stockMap = @json($stockMap);
+const allVariants = @json($allVariants->map(fn($v) => ['size' => $v->size, 'color' => $v->color, 'stock' => $v->stock])->values());
 
 function getSelectedSize() {
     const checked = document.querySelector('input[name="size"]:checked');
@@ -381,48 +364,14 @@ function updateStockInfo() {
     const btnBuy  = document.getElementById('btn-buy');
 
     if (stock === null || stock === undefined) {
-        stockEl.textContent = '—';
-        stockEl.style.color = 'var(--gray-400)';
+        if (stockEl) { stockEl.textContent = '—'; stockEl.style.color = 'var(--gray-400)'; }
     } else if (stock <= 0) {
-        stockEl.textContent = 'Habis';
-        stockEl.style.color = '#dc2626';
+        if (stockEl) { stockEl.textContent = 'Habis'; stockEl.style.color = '#dc2626'; }
         if (qtyInput) qtyInput.max = 0;
         if (btnCart) { btnCart.disabled = true; btnCart.style.opacity = '0.4'; }
         if (btnBuy)  { btnBuy.disabled  = true; btnBuy.style.opacity  = '0.4'; }
     } else {
-        stockEl.textContent = stock + ' pcs';
-        stockEl.style.color = stock <= 5 ? '#f59e0b' : 'var(--gray-800)';
-        if (qtyInput) {
-            qtyInput.max = stock;
-            if (parseInt(qtyInput.value) > stock) qtyInput.value = stock;
-        }
-        if (btnCart) { btnCart.disabled = false; btnCart.style.opacity = '1'; }
-        if (btnBuy)  { btnBuy.disabled  = false; btnBuy.style.opacity  = '1'; }
-    }
-}
-
-function onAccessoryVariantChange() {
-    const size = getSelectedSize();
-    const stock = getStock(size, '');
-    const stockEl = document.getElementById('stock-count');
-    const qtyInput = document.getElementById('qty');
-    const btnCart = document.getElementById('btn-cart');
-    const btnBuy  = document.getElementById('btn-buy');
-
-    if (stock === null || stock === undefined) {
-        stockEl.textContent = '—';
-        stockEl.style.color = 'var(--gray-400)';
-        return;
-    }
-    if (stock <= 0) {
-        stockEl.textContent = 'Habis';
-        stockEl.style.color = '#dc2626';
-        if (qtyInput) qtyInput.max = 0;
-        if (btnCart) { btnCart.disabled = true; btnCart.style.opacity = '0.4'; }
-        if (btnBuy)  { btnBuy.disabled  = true; btnBuy.style.opacity  = '0.4'; }
-    } else {
-        stockEl.textContent = stock + ' pcs';
-        stockEl.style.color = stock <= 5 ? '#f59e0b' : 'var(--gray-800)';
+        if (stockEl) { stockEl.textContent = stock + ' pcs'; stockEl.style.color = stock <= 5 ? '#f59e0b' : 'var(--gray-800)'; }
         if (qtyInput) {
             qtyInput.max = stock;
             if (parseInt(qtyInput.value) > stock) qtyInput.value = stock;
@@ -441,20 +390,7 @@ function changeQty(delta) {
     input.value = val;
 }
 
-// Init saat halaman load
 document.addEventListener('DOMContentLoaded', function() {
-    const sizeRadios = document.querySelectorAll('input[name="size"][type="radio"]');
-    if (sizeRadios.length === 0) {
-        return; // aksesoris fix Pink: stok statis dari Blade
-    }
-
-    const colorRadios = document.querySelectorAll('input[name="color"][type="radio"]');
-    if (colorRadios.length === 0) {
-        // mode aksesoris dengan varian (Gold/Silver/Rose Gold), tanpa color-picker
-        onAccessoryVariantChange();
-        return;
-    }
-
     const firstSize = document.querySelector('input[name="size"]:checked');
     if (firstSize) {
         updateColorOptions(firstSize.value);
