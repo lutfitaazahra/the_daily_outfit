@@ -8,21 +8,17 @@
     $isAccessory = $product->category && $product->category->slug === 'accessories';
     $hasVariants = (bool) $product->has_variants;
 
-    // Kumpulkan semua kombinasi dari product_sizes
     $allVariants = $product->sizes;
 
-    // Untuk baju: ambil ukuran unik dan warna unik
     $uniqueSizes  = $allVariants->whereNotNull('size')->pluck('size')->unique()->values();
     $uniqueColors = $allVariants->whereNotNull('color')->pluck('color')->unique()->values();
 
-    // Build stock map: "size||color" => stock (untuk JS)
     $stockMap = [];
     foreach ($allVariants as $v) {
         $key = ($v->size ?? '') . '||' . ($v->color ?? '');
         $stockMap[$key] = $v->stock;
     }
 
-    // Stok total khusus aksesoris fix Pink (tanpa varian)
     $accessoryStock = ($isAccessory && !$hasVariants) ? $allVariants->sum('stock') : 0;
 
     function parseDesc($text) {
@@ -92,6 +88,10 @@
         'Cokelat'=>'#92400e','Kopi'=>'#6f4e37','Khaki'=>'#c3b091','Tan'=>'#d2b48c',
         'Baby Pink'=>'#ffb6c1','Soft Blue'=>'#aec6cf','Soft Pink'=>'#ffb6c1',
         'Soft Green'=>'#b5ead7','Baby Blue'=>'#aec6cf','Coksu'=>'#8B7355',
+        'Brown'=>'#92400e','Blue'=>'#3b82f6','Ivory'=>'#fffff0','Peach'=>'#ffcba4',
+        'Ice Blue'=>'#a5d8e6','Green'=>'#22c55e','Yellow'=>'#fbbf24','Purple'=>'#a855f7',
+        'Black'=>'#1a1a1a','White'=>'#f5f5f5','Red'=>'#dc2626','Gray'=>'#9ca3af',
+        'Biru Tua'=>'#1e3a5f','Biru Muda'=>'#7dd3fc',
     ];
 @endphp
 
@@ -193,7 +193,7 @@
                                     <input type="radio" name="size" value="{{ $sz }}" style="display:none;"
                                            onchange="onSizeChange('{{ $sz }}')" {{ $loop->first ? 'checked' : '' }}>
                                     <span class="size-option" style="display:inline-flex; align-items:center; justify-content:center; width:44px; height:44px; border-radius:8px; border:1.5px solid var(--gray-200); font-size:13px; font-weight:600; transition:all 0.2s;">
-                                        {{ $sz }}
+                                        {{ $sz === 'Free Size' ? 'All Size' : $sz }}
                                     </span>
                                 </label>
                                 @endforeach

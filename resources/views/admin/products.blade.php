@@ -69,24 +69,41 @@
                     <span></span>
                 </div>
 
-                <div id="add-combo-rows" style="display:flex; flex-direction:column; gap:8px; margin-bottom:10px;">
-                    <div style="display:grid; grid-template-columns:90px 1fr 80px 36px; gap:8px; align-items:center; background:#fff8f9; border:1.5px solid #f0dde2; border-radius:10px; padding:8px 12px;">
-                        <select name="combo_size[]" style="border:none; background:transparent; font-size:13px; color:#4a3840; padding:4px 2px; width:100%;">
-                            <option value="">-</option>
-                            <option>S</option><option>M</option><option>L</option>
-                            <option>XL</option><option>XXL</option><option>Free Size</option>
-                        </select>
-                        <input type="text" name="combo_color[]" placeholder="cth: Dusty Pink"
-                               style="border:none; background:transparent; font-size:13px; color:#4a3840; padding:4px 2px; width:100%;">
-                        <input type="number" name="combo_stock[]" min="0" placeholder="0"
-                               style="text-align:center; font-weight:600; border:none; background:transparent; font-size:13px; color:#4a3840; padding:4px 2px; width:100%;">
-                        <button type="button" onclick="this.closest('div[style]').remove()"
-                                style="background:none; border:none; color:#e0a0b0; cursor:pointer; font-size:18px; line-height:1; padding:0; text-align:center;">×</button>
+                <div id="add-combo-rows" style="display:flex; flex-direction:column; gap:8px; margin-bottom:10px;"></div>
+
+                <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px;">
+                    <button type="button" onclick="addComboRowAdd()" class="abtn abtn-outline" style="padding:8px 16px; font-size:12px;">+ Tambah Kombinasi</button>
+                    <button type="button" onclick="fillAllSizes()" class="abtn abtn-outline" style="padding:8px 16px; font-size:12px;">⚡ Isi Semua Ukuran (S,M,L,XL)</button>
+                </div>
+
+                <div style="background:#fff8f9; border:1.5px solid #f0dde2; border-radius:10px; padding:12px 14px;">
+                    <label style="display:block; font-size:11px; font-weight:700; color:#9a8a8e; text-transform:uppercase; letter-spacing:1px; margin-bottom:6px;">
+                        Generate Otomatis: Ukuran × Warna
+                    </label>
+                    <p style="font-size:11px; color:#b09098; margin-bottom:8px;">Tulis daftar warna dipisah koma, lalu klik generate.</p>
+
+                    <div style="display:flex; gap:16px; margin-bottom:10px; flex-wrap:wrap;">
+                        <label style="display:flex; align-items:center; gap:6px; font-size:12px; color:#4a3840; cursor:pointer;">
+                            <input type="radio" name="bulk_size_mode" value="standard" checked style="accent-color:#c94f7c;">
+                            Ukuran S, M, L, XL
+                        </label>
+                        <label style="display:flex; align-items:center; gap:6px; font-size:12px; color:#4a3840; cursor:pointer;">
+                            <input type="radio" name="bulk_size_mode" value="allsize" style="accent-color:#c94f7c;">
+                            All Size (1 ukuran saja)
+                        </label>
+                    </div>
+
+                    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                        <input type="text" id="bulk_colors" placeholder="cth: Dusty Pink, Hitam, Navy"
+                               style="flex:1; min-width:200px; padding:8px 12px; border:1.5px solid #f0dde2; border-radius:8px; font-size:13px; box-sizing:border-box;">
+                        <button type="button" onclick="generateSizeColorCombos()" class="abtn abtn-pink" style="padding:8px 16px; font-size:12px; white-space:nowrap;">
+                            ⚡ Generate Semua Kombinasi
+                        </button>
                     </div>
                 </div>
-                <button type="button" onclick="addComboRowAdd()" class="abtn abtn-outline" style="padding:8px 16px; font-size:12px;">+ Tambah Kombinasi</button>
+
                 <div style="margin-top:10px; padding:10px 14px; background:#fff0f3; border-radius:8px; font-size:12px; color:#c94f7c;">
-                    💡 <strong>Contoh:</strong> S + Dusty Pink = 10 pcs, M + Hitam = 15 pcs
+                    💡 <strong>Contoh:</strong> pilih "S,M,L,XL" + isi "Dusty Pink, Hitam, Navy" → 12 baris. Pilih "All Size" + warna yang sama → 3 baris (All Size + tiap warna). Tinggal isi stok masing-masing.
                 </div>
             </div>
 
@@ -187,24 +204,60 @@
 </div>
 
 <script>
-function addComboRowAdd() {
-    const container = document.getElementById('add-combo-rows');
+function makeComboRow(size, color) {
+    color = color || '';
     const row = document.createElement('div');
     row.style.cssText = 'display:grid; grid-template-columns:90px 1fr 80px 36px; gap:8px; align-items:center; background:#fff8f9; border:1.5px solid #f0dde2; border-radius:10px; padding:8px 12px;';
     row.innerHTML = `
         <select name="combo_size[]" style="border:none; background:transparent; font-size:13px; color:#4a3840; padding:4px 2px; width:100%;">
             <option value="">-</option>
-            <option>S</option><option>M</option><option>L</option>
-            <option>XL</option><option>XXL</option><option>Free Size</option>
+            <option ${size==='S'?'selected':''}>S</option>
+            <option ${size==='M'?'selected':''}>M</option>
+            <option ${size==='L'?'selected':''}>L</option>
+            <option ${size==='XL'?'selected':''}>XL</option>
+            <option ${size==='XXL'?'selected':''}>XXL</option>
+            <option ${size==='Free Size'?'selected':''}>Free Size</option>
         </select>
-        <input type="text" name="combo_color[]" placeholder="cth: Dusty Pink"
+        <input type="text" name="combo_color[]" placeholder="cth: Dusty Pink" value="${color.replace(/"/g,'&quot;')}"
                style="border:none; background:transparent; font-size:13px; color:#4a3840; padding:4px 2px; width:100%;">
         <input type="number" name="combo_stock[]" min="0" placeholder="0"
                style="text-align:center; font-weight:600; border:none; background:transparent; font-size:13px; color:#4a3840; padding:4px 2px; width:100%;">
         <button type="button" onclick="this.closest('div').remove()"
                 style="background:none; border:none; color:#e0a0b0; cursor:pointer; font-size:18px; line-height:1; padding:0; text-align:center;">×</button>
     `;
-    container.appendChild(row);
+    return row;
+}
+
+function addComboRowAdd() {
+    document.getElementById('add-combo-rows').appendChild(makeComboRow('', ''));
+}
+
+function fillAllSizes() {
+    const container = document.getElementById('add-combo-rows');
+    container.innerHTML = '';
+    ['S','M','L','XL'].forEach(sz => container.appendChild(makeComboRow(sz, '')));
+}
+
+function generateSizeColorCombos() {
+    const raw = document.getElementById('bulk_colors').value.trim();
+    if (!raw) {
+        alert('Isi dulu daftar warnanya, pisahkan dengan koma. Contoh: Dusty Pink, Hitam, Navy');
+        return;
+    }
+    const colors = raw.split(',').map(c => c.trim()).filter(c => c.length > 0);
+    if (colors.length === 0) {
+        alert('Daftar warna tidak valid.');
+        return;
+    }
+    const mode = document.querySelector('input[name="bulk_size_mode"]:checked').value;
+    const sizes = mode === 'allsize' ? ['Free Size'] : ['S','M','L','XL'];
+    const container = document.getElementById('add-combo-rows');
+    container.innerHTML = '';
+    sizes.forEach(sz => {
+        colors.forEach(col => {
+            container.appendChild(makeComboRow(sz, col));
+        });
+    });
 }
 
 function toggleAddSection() {
