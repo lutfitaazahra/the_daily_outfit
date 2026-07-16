@@ -1,0 +1,1 @@
+how 338b898:resources/views/product-detail.blade.php

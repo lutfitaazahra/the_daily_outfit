@@ -62,4 +62,34 @@ class OrderController extends Controller
 
         return back()->with('success', 'Pembayaran berhasil dikonfirmasi!');
     }
+
+    /**
+     * Ajukan return untuk sebuah pesanan.
+     * Hanya bisa diajukan kalau pesanan sudah dibayar / diproses / selesai,
+     * dan belum pernah diajukan return sebelumnya.
+     */
+    public function requestReturn(Request $request, Order $order)
+    {
+        if ($order->user_id !== auth()->id()) abort(403);
+
+        // hanya pesanan yang sudah dibayar/diproses/selesai yang bisa direturn
+        if (!in_array($order->status, ['processing', 'completed', 'shipped', 'delivered'])) {
+            return back()->with('error', 'Pesanan ini belum bisa diajukan return.');
+        }
+
+        if ($order->status === 'return_requested') {
+            return back()->with('error', 'Return untuk pesanan ini sudah pernah diajukan.');
+        }
+
+        $request->validate([
+            'reason' => 'nullable|string|max:1000',
+        ]);
+
+        $order->update([
+            'status'        => 'return_requested',
+            'return_reason' => $request->input('reason'),
+        ]);
+
+        return back()->with('success', 'Pengajuan return berhasil dikirim. Tim kami akan segera meninjaunya.');
+    }
 }
