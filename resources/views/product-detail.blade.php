@@ -1,403 +1,289 @@
 @extends('layouts.app')
 
-@section('title', $product->name . ' — The Daily Outfit')
+@section('title', 'Detail Pesanan — The Daily Outfit')
 
 @section('content')
+<style>
+.od-wrap { background: var(--pink-50); min-height: 100vh; padding: 2rem 0; }
+.od-container { max-width: 760px; margin: 0 auto; padding: 0 1rem; }
 
-@php
-    $isAccessory = $product->category && $product->category->slug === 'accessories';
+.od-header { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom: 1.5rem; flex-wrap:wrap; gap:8px; }
+.od-header h1 { font-size: 1.5rem; font-weight: 700; color: var(--brown); margin: 0 0 4px; }
+.od-header p { font-size: 13px; color: var(--gray-400); margin: 0; }
 
-    // Kumpulkan semua kombinasi dari product_sizes
-    $allVariants = $product->sizes; // koleksi semua baris
+.od-card {
+    background: white; border-radius: var(--radius);
+    box-shadow: var(--shadow); padding: 1.5rem; margin-bottom: 1rem;
+}
+.od-card-title {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 15px; font-weight: 700; color: var(--gray-800);
+    margin-bottom: 1.25rem; padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--gray-100);
+}
 
-    // Untuk baju: ambil ukuran unik dan warna unik
-    $uniqueSizes  = $allVariants->whereNotNull('size')->pluck('size')->unique()->values();
-    $uniqueColors = $allVariants->whereNotNull('color')->pluck('color')->unique()->values();
+/* Timeline */
+.od-timeline { display: flex; flex-direction: column; gap: 0; }
+.od-tl-item { display: flex; gap: 12px; position: relative; padding-bottom: 1.5rem; }
+.od-tl-item:last-child { padding-bottom: 0; }
+.od-tl-dot {
+    width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700; color: white; z-index: 1;
+}
+.od-tl-line {
+    position: absolute; left: 13px; top: 28px; bottom: 0;
+    width: 2px; background: var(--gray-200);
+}
+.od-tl-item.done .od-tl-line { background: var(--pink-300); }
+.od-tl-content { flex: 1; }
+.od-tl-title { font-size: 14px; font-weight: 700; color: var(--gray-800); }
+.od-tl-desc { font-size: 12px; color: var(--gray-400); margin-top: 2px; }
 
-    // Build stock map: "size||color" => stock (untuk JS)
-    $stockMap = [];
-    foreach ($allVariants as $v) {
-        $key = ($v->size ?? '') . '||' . ($v->color ?? '');
-        $stockMap[$key] = $v->stock;
-    }
+/* Badge */
+.badge {
+    display: inline-block; font-size: 11px; font-weight: 600;
+    padding: 3px 10px; border-radius: 50px;
+}
+.badge-pending    { background: #fef9c3; color: #854d0e; }
+.badge-processing { background: #dbeafe; color: #1e40af; }
+.badge-shipped    { background: #e0f2fe; color: #0369a1; }
+.badge-delivered  { background: #dcfce7; color: #166534; }
+.badge-cancelled  { background: #fee2e2; color: #991b1b; }
+.badge-returned   { background: #ede9fe; color: #5b21b6; }
+.badge-paid       { background: #dcfce7; color: #166534; }
+.badge-unpaid     { background: #fff7ed; color: #9a3412; }
+.badge-refunded   { background: #ede9fe; color: #5b21b6; }
 
-    function parseDesc($text) {
-        $text = e($text);
-        $text = preg_replace('/^### (.+)$/m', '<h4 style="font-size:14px;font-weight:700;color:var(--brown);margin:1rem 0 0.5rem;">$1</h4>', $text);
-        $text = preg_replace('/^## (.+)$/m', '<h3 style="font-size:16px;font-weight:700;color:var(--brown);margin:1.25rem 0 0.5rem;">$1</h3>', $text);
-        $text = preg_replace('/\*\*(.+?)\*\*/', '<strong>$1</strong>', $text);
+/* Items */
+.od-item-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 0; border-bottom: 1px solid var(--gray-100);
+}
+.od-item-row:last-child { border-bottom: none; }
+.od-item-img {
+    width: 52px; height: 52px; border-radius: 10px; overflow: hidden;
+    background: var(--pink-50); flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+}
+.od-item-img img { width: 100%; height: 100%; object-fit: cover; }
+.od-item-name { font-size: 14px; font-weight: 600; color: var(--gray-800); }
+.od-item-sub { font-size: 12px; color: var(--gray-400); margin-top: 2px; }
+.od-item-price { font-weight: 700; color: var(--gray-800); white-space: nowrap; }
 
-        $lines = explode("\n", $text);
-        $output = '';
-        $inTable = false;
-        $tableHtml = '';
-        $isHeader = true;
+.summary-row { display: flex; justify-content: space-between; font-size: 14px; color: var(--gray-600); padding: 6px 0; }
+.summary-total {
+    display: flex; justify-content: space-between;
+    font-size: 16px; font-weight: 700; color: var(--brown);
+    padding: 12px 0 0; border-top: 2px solid var(--gray-100); margin-top: 6px;
+}
+.badge-free { background: #f0fdf4; color: #16a34a; font-size: 11px; font-weight: 700; padding: 2px 10px; border-radius: 50px; }
 
-        foreach ($lines as $i => $line) {
-            $trimmed = trim($line);
+.od-actions { display: flex; gap: 10px; margin-top: 1rem; flex-wrap: wrap; }
 
-            if (strpos($trimmed, '|') !== false) {
-                if (preg_match('/^\|[\s\-\|]+\|$/', $trimmed)) { $isHeader = false; continue; }
-                if (!$inTable) {
-                    $inTable = true; $isHeader = true;
-                    $tableHtml = '<div style="overflow-x:auto;margin:1rem 0;"><table style="width:100%;border-collapse:collapse;font-size:13px;">';
-                }
-                $cols = array_map('trim', explode('|', trim($trimmed, '|')));
-                $tag = $isHeader ? 'th' : 'td';
-                $style = $isHeader
-                    ? 'style="padding:8px 12px;background:var(--pink-50);color:var(--pink-600);font-weight:700;border:1px solid #fce7f3;text-align:left;"'
-                    : 'style="padding:8px 12px;border:1px solid #fce7f3;color:var(--gray-700);"';
-                $tableHtml .= '<tr>';
-                foreach ($cols as $col) { if ($col !== '') $tableHtml .= "<{$tag} {$style}>{$col}</{$tag}>"; }
-                $tableHtml .= '</tr>';
-            } else {
-                if ($inTable) { $output .= $tableHtml . '</table></div>'; $inTable = false; $tableHtml = ''; $isHeader = true; }
-                if (preg_match('/^\* (.+)$/', $trimmed, $m)) {
-                    $output .= '<li style="font-size:14px;color:var(--gray-600);line-height:1.8;margin-left:1rem;">' . $m[1] . '</li>';
-                } elseif (preg_match('/^- (.+)$/', $trimmed, $m)) {
-                    $output .= '<li style="font-size:14px;color:var(--gray-600);line-height:1.8;margin-left:1rem;">' . $m[1] . '</li>';
-                } elseif ($trimmed === '') {
-                    $output .= '<br>';
-                } else {
-                    if (substr($trimmed, 0, 1) === '<') { $output .= $trimmed; }
-                    else { $output .= '<p style="font-size:14px;color:var(--gray-600);line-height:1.8;margin:0 0 0.5rem;">' . $trimmed . '</p>'; }
-                }
-            }
-        }
-        if ($inTable) $output .= $tableHtml . '</table></div>';
-        return $output;
-    }
+.od-return-box {
+    padding: 12px; border-radius: 8px; font-size: 13px; font-weight: 600; text-align: center; flex: 1;
+}
+.od-return-pending  { background:#fff7ed; color:#9a3412; border:1.5px solid #fed7aa; }
+.od-return-approved { background:#f0fdf4; color:#166534; border:1.5px solid #bbf7d0; }
+.od-return-rejected { background:#fef2f2; color:#991b1b; border:1.5px solid #fecaca; }
+</style>
 
-    $colorMap = [
-        'Hitam'=>'#1a1a1a','Putih'=>'#f5f5f5','Abu'=>'#9ca3af','Grey'=>'#9ca3af',
-        'Navy'=>'#1e3a5f','Coklat'=>'#92400e','Krem'=>'#f5e6c8','Pink'=>'#f9a8d4',
-        'Merah'=>'#dc2626','Biru'=>'#3b82f6','Hijau'=>'#22c55e','Kuning'=>'#fbbf24',
-        'Ungu'=>'#a855f7','Orange'=>'#f97316','Maroon'=>'#7f1d1d','Dusty Pink'=>'#e8a0a0',
-        'Sage'=>'#87a878','Sage Green'=>'#87a878','Lavender'=>'#c4b5fd','Camel'=>'#c19a6b',
-        'Olive'=>'#6b7c3a','Olive Green'=>'#6b7c3a','Tosca'=>'#2dd4bf','Beige'=>'#e8d5b7',
-        'Oat Cream'=>'#f5ede0','Harbor Green'=>'#4a7c6f','Sky Blue'=>'#7dd3fc',
-        'Lilac'=>'#c4b5fd','Charcoal'=>'#374151','Emerald Green'=>'#059669',
-        'Dusty Blue'=>'#7096a8','Ash Blue'=>'#8fa3b1','Ocean Blue'=>'#0369a1',
-        'Dusty Yellow'=>'#f0d060','Atlantic Sea'=>'#1e6b8a','Rose Gold'=>'#b76e79',
-        'Gold'=>'#d4a017','Silver'=>'#c0c0c0','Butter Yellow'=>'#f5d060',
-        'Butteryellow'=>'#f5d060','Mahogany'=>'#c04000','Biru Denim'=>'#1560bd',
-        'Denim'=>'#1560bd','Cream'=>'#fffdd0','Mocca'=>'#6f4e37','Teal'=>'#008080',
-        'Mustard'=>'#e3a857','Terracotta'=>'#e2725b','Burgundy'=>'#800020',
-        'Pastel Pink'=>'#ffb6c1','Pastel Blue'=>'#aec6cf','Pastel Green'=>'#b5ead7',
-        'Pastel Yellow'=>'#fdfd96','Pastel Purple'=>'#d8b4fe','Abu-Abu'=>'#9ca3af',
-        'Cokelat'=>'#92400e','Kopi'=>'#6f4e37','Khaki'=>'#c3b091','Tan'=>'#d2b48c',
-        'Baby Pink'=>'#ffb6c1','Soft Blue'=>'#aec6cf','Soft Pink'=>'#ffb6c1',
-        'Soft Green'=>'#b5ead7','Baby Blue'=>'#aec6cf','Coksu'=>'#8B7355',
+<div class="od-wrap">
+<div class="od-container">
+
+    @if(session('success'))
+    <div class="alert alert-success" style="margin-bottom:1rem;">{{ session('success') }}</div>
+    @endif
+
+    @if(session('error'))
+    <div class="alert alert-error" style="margin-bottom:1rem;">{{ session('error') }}</div>
+    @endif
+
+    @php
+    $statusLabels = [
+        'pending'    => ['⏳ Menunggu',  'badge-pending'],
+        'processing' => ['🔄 Diproses',  'badge-processing'],
+        'shipped'    => ['🚚 Dikirim',   'badge-shipped'],
+        'delivered'  => ['✅ Selesai',   'badge-delivered'],
+        'cancelled'  => ['❌ Dibatalkan','badge-cancelled'],
+        'returned'   => ['↩️ Direturn',  'badge-returned'],
     ];
-@endphp
+    $badge = $statusLabels[$order->status] ?? ['Unknown', 'badge-pending'];
+    @endphp
 
-<div class="section">
-    <div class="container">
-
-        <div style="font-size:13px; color:var(--gray-400); margin-bottom:2rem;">
-            <a href="{{ route('home') }}" style="color:var(--gray-400);">Home</a>
-            <span style="margin:0 8px;">›</span>
-            <a href="{{ route('shop') }}" style="color:var(--gray-400);">Shop</a>
-            <span style="margin:0 8px;">›</span>
-            <span style="color:var(--gray-800);">{{ $product->name }}</span>
+    <div class="od-header">
+        <div>
+            <h1>Pesanan #{{ $order->order_number }}</h1>
+            <p>{{ $order->created_at->format('d M Y, H:i') }}</p>
         </div>
+        <div style="display:flex; gap:6px; flex-wrap:wrap;">
+            <span class="badge {{ $badge[1] }}">{{ $badge[0] }}</span>
+            <span class="badge {{ $order->payment_status === 'paid' ? 'badge-paid' : ($order->payment_status === 'refunded' ? 'badge-refunded' : 'badge-unpaid') }}">
+                {{ $order->payment_status === 'paid' ? '💳 Lunas' : ($order->payment_status === 'refunded' ? '↩️ Direfund' : '⚠️ Belum Bayar') }}
+            </span>
+        </div>
+    </div>
 
-        @if(session('success'))
-        <div class="alert alert-success" style="margin-bottom:1.5rem;">{{ session('success') }}</div>
-        @endif
-        @if($errors->any())
-        <div class="alert alert-error" style="margin-bottom:1.5rem;">{{ $errors->first() }}</div>
-        @endif
+    @if($order->status !== 'cancelled' && $order->status !== 'returned')
+    {{-- TIMELINE STATUS --}}
+    <div class="od-card">
+        <div class="od-card-title">📍 Status Pesanan</div>
+        @php
+        $steps = [
+            'pending'    => ['📋', 'Pesanan Dibuat', 'Pesanan kamu sedang menunggu konfirmasi pembayaran.'],
+            'processing' => ['⚙️', 'Diproses', 'Pesanan kamu sedang disiapkan oleh penjual.'],
+            'shipped'    => ['🚚', 'Dikirim', 'Pesanan dalam perjalanan ke alamat kamu.'],
+            'delivered'  => ['✅', 'Selesai', 'Pesanan telah tiba di tujuan.'],
+        ];
+        $stepKeys = array_keys($steps);
+        $currentIdx = array_search($order->status, $stepKeys);
+        @endphp
+        <div class="od-timeline">
+            @foreach($steps as $key => [$icon, $title, $desc])
+            @php
+                $idx = array_search($key, $stepKeys);
+                $done = $currentIdx !== false && $idx <= $currentIdx;
+            @endphp
+            <div class="od-tl-item {{ $done ? 'done' : '' }}">
+                @if(!$loop->last)<div class="od-tl-line"></div>@endif
+                <div class="od-tl-dot" style="background:{{ $done ? '#c94f7c' : '#d1d5db' }};">
+                    {{ $done ? '✓' : $icon }}
+                </div>
+                <div class="od-tl-content">
+                    <div class="od-tl-title" style="color:{{ $done ? 'var(--brown)' : 'var(--gray-400)' }};">{{ $title }}</div>
+                    <div class="od-tl-desc">{{ $desc }}</div>
+                </div>
+            </div>
+            @endforeach
+        </div>
+    </div>
+    @elseif($order->status === 'cancelled')
+    <div class="od-card" style="background:#fef2f2; border:1px solid #fecaca;">
+        <div style="font-size:14px; font-weight:600; color:#991b1b;">❌ Pesanan ini telah dibatalkan</div>
+        <p style="font-size:12px; color:#b91c1c; margin-top:4px;">Hubungi admin jika kamu merasa ini sebuah kesalahan.</p>
+    </div>
+    @elseif($order->status === 'returned')
+    <div class="od-card" style="background:#f5f3ff; border:1px solid #ddd6fe;">
+        <div style="font-size:14px; font-weight:600; color:#5b21b6;">↩️ Pesanan ini telah direturn</div>
+        <p style="font-size:12px; color:#6d28d9; margin-top:4px;">Dana akan dikembalikan sesuai kebijakan toko.</p>
+    </div>
+    @endif
 
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:4rem; align-items:start;">
-
-            <!-- FOTO PRODUK -->
-            <div style="border-radius:var(--radius); overflow:hidden; background:var(--pink-50); aspect-ratio:3/4;">
-                @if($product->image)
-                    <img src="{{ str_starts_with($product->image, 'http') ? $product->image : asset('storage/' . $product->image) }}"
-                         alt="{{ $product->name }}" style="width:100%; height:100%; object-fit:cover;">
+    {{-- ITEM PESANAN --}}
+    <div class="od-card">
+        <div class="od-card-title">🛍️ Item Pesanan</div>
+        @foreach($items as $item)
+        <div class="od-item-row">
+            <div class="od-item-img">
+                @if($item->product && $item->product->image)
+                <img src="{{ asset('storage/' . $item->product->image) }}">
                 @else
-                    <div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center;
-                                background:var(--pink-100); font-size:4rem; font-weight:700; color:var(--pink-400);">
-                        {{ mb_substr($product->name, 0, 2) }}
-                    </div>
+                <span style="font-size:18px;">👗</span>
                 @endif
             </div>
+            <div style="flex:1;">
+                <div class="od-item-name">{{ $item->product->name ?? '-' }}</div>
+                <div class="od-item-sub">Ukuran {{ $item->size }} × {{ $item->quantity }}</div>
+            </div>
+            <div class="od-item-price">Rp {{ number_format($item->price * $item->quantity, 0, ',', '.') }}</div>
+        </div>
+        @endforeach
 
-            <!-- INFO PRODUK -->
-            <div style="padding-top:1rem;">
-                <span style="font-size:12px; font-weight:600; letter-spacing:1px; text-transform:uppercase; color:var(--pink-600);">
-                    {{ $product->category->name ?? '' }}
-                </span>
-
-                <h1 style="font-family:var(--font); font-size:2.25rem; font-weight:700; color:var(--brown);
-                           margin:0.5rem 0 0.75rem; line-height:1.2;">{{ $product->name }}</h1>
-
-                <div style="font-size:1.5rem; font-weight:700; color:var(--gray-800); margin-bottom:1.25rem;">
-                    Rp {{ number_format($product->price, 0, ',', '.') }}
-                </div>
-
-                @if($product->description)
-                <div style="margin-bottom:1.5rem;">
-                    {!! parseDesc($product->description) !!}
-                </div>
-                @endif
-
-                @auth
-                <form method="POST" action="{{ route('cart.add') }}" id="product-form">
-                    @csrf
-                    <input type="hidden" name="product_id" value="{{ $product->id }}">
-
-                    @if($isAccessory)
-                        {{-- AKSESORIS: pilih varian atau langsung beli --}}
-                        @php $accessoryVariants = $allVariants->where('stock', '>', 0); @endphp
-                        @if($accessoryVariants->count() > 0)
-                        <div style="margin-bottom:1.5rem;">
-                            <p style="font-size:13px; font-weight:600; margin-bottom:0.75rem; color:var(--gray-800);">Pilih Varian</p>
-                            <div style="display:flex; gap:10px; flex-wrap:wrap;">
-                                @foreach($accessoryVariants as $variant)
-                                <label style="cursor:pointer;">
-                                    <input type="radio" name="size" value="{{ $variant->size }}" style="display:none;" {{ $loop->first ? 'checked' : '' }}>
-                                    <span class="size-option" style="display:inline-flex; align-items:center; justify-content:center; padding:8px 16px; border-radius:8px; border:1.5px solid var(--gray-200); font-size:13px; font-weight:600; transition:all 0.2s;">
-                                        {{ $variant->size }}
-                                        <span style="font-size:11px; color:var(--gray-400); margin-left:4px;">({{ $variant->stock }})</span>
-                                    </span>
-                                </label>
-                                @endforeach
-                            </div>
-                        </div>
-                        @else
-                        {{-- Tidak ada varian, langsung beli --}}
-                        <input type="hidden" name="size" value="One Size">
-                        <p style="font-size:13px; color:var(--gray-600); margin-bottom:1.5rem;">
-                            Stok tersedia: <strong>{{ $product->stock }}</strong>
-                        </p>
-                        @endif
-
-                    @else
-                        {{-- BAJU: pilih ukuran dulu, lalu warna muncul sesuai --}}
-                        @if($uniqueSizes->count() > 0)
-                        <div style="margin-bottom:1.5rem;">
-                            <p style="font-size:13px; font-weight:600; margin-bottom:0.75rem; color:var(--gray-800);">Pilih Ukuran</p>
-                            <div style="display:flex; gap:10px; flex-wrap:wrap;" id="size-picker">
-                                @foreach($uniqueSizes as $sz)
-                                <label style="cursor:pointer;">
-                                    <input type="radio" name="size" value="{{ $sz }}" style="display:none;"
-                                           onchange="onSizeChange('{{ $sz }}')" {{ $loop->first ? 'checked' : '' }}>
-                                    <span class="size-option" style="display:inline-flex; align-items:center; justify-content:center; width:44px; height:44px; border-radius:8px; border:1.5px solid var(--gray-200); font-size:13px; font-weight:600; transition:all 0.2s;">
-                                        {{ $sz }}
-                                    </span>
-                                </label>
-                                @endforeach
-                            </div>
-                        </div>
-                        @else
-                        <input type="hidden" name="size" value="Free Size">
-                        @endif
-
-                        @if($uniqueColors->count() > 0)
-                        <div style="margin-bottom:1.5rem;" id="color-section">
-                            <p style="font-size:13px; font-weight:600; margin-bottom:0.75rem; color:var(--gray-800);">Pilih Warna</p>
-                            <div style="display:flex; gap:10px; flex-wrap:wrap;" id="color-picker">
-                                @foreach($uniqueColors as $color)
-                                @php
-                                    $colorKey = collect($colorMap)->keys()->first(fn($k) => strtolower($k) === strtolower($color));
-                                    $hex = $colorKey ? $colorMap[$colorKey] : ('#' . substr(md5(strtolower($color)), 0, 6));
-                                @endphp
-                                <label style="cursor:pointer;" class="color-label" data-color="{{ $color }}">
-                                    <input type="radio" name="color" value="{{ $color }}" style="display:none;"
-                                           onchange="onColorChange('{{ $color }}')" {{ $loop->first ? 'checked' : '' }}>
-                                    <span class="color-option" title="{{ $color }}"
-                                          style="display:inline-flex; flex-direction:column; align-items:center; gap:4px;">
-                                        <span style="width:32px; height:32px; border-radius:50%; background:{{ $hex }};
-                                                     border:2px solid var(--gray-200); display:block; transition:all 0.2s;"></span>
-                                        <span style="font-size:10px; color:var(--gray-500);">{{ $color }}</span>
-                                    </span>
-                                </label>
-                                @endforeach
-                            </div>
-                        </div>
-                        @else
-                        <input type="hidden" name="color" value="">
-                        @endif
-                    @endif
-
-                    <!-- JUMLAH -->
-                    <div style="margin-bottom:1rem;">
-                        <p style="font-size:13px; font-weight:600; margin-bottom:0.75rem; color:var(--gray-800);">Jumlah</p>
-                        <div style="display:inline-flex; align-items:center; border:1.5px solid var(--gray-200); border-radius:8px; overflow:hidden;">
-                            <button type="button" onclick="changeQty(-1)" style="width:40px; height:40px; border:none; background:var(--pink-50); font-size:1.1rem; cursor:pointer;">−</button>
-                            <input type="number" name="quantity" id="qty" value="1" min="1" max="99"
-                                   style="width:56px; height:40px; text-align:center; border:none; border-left:1px solid var(--gray-200); border-right:1px solid var(--gray-200); font-size:14px;">
-                            <button type="button" onclick="changeQty(1)" style="width:40px; height:40px; border:none; background:var(--pink-50); font-size:1.1rem; cursor:pointer;">+</button>
-                        </div>
-                    </div>
-
-                    <!-- INFO STOK DINAMIS -->
-                    <div id="stock-info" style="font-size:13px; color:var(--gray-600); margin-bottom:1.5rem;">
-                        Stok tersedia: <strong id="stock-count">—</strong>
-                    </div>
-
-                    <div style="display:flex; gap:12px; flex-wrap:wrap;">
-                        <button type="submit" formaction="{{ route('cart.add') }}" id="btn-cart"
-                                class="btn btn-outline" style="flex:1; justify-content:center; padding:14px;">
-                            Tambah ke Keranjang
-                        </button>
-                        <button type="submit" formaction="{{ route('buy.now') }}" id="btn-buy"
-                                class="btn btn-dark" style="flex:1; justify-content:center; padding:14px;">
-                            Beli Sekarang
-                        </button>
-                    </div>
-                    <a href="{{ route('cart') }}" class="btn btn-outline"
-                       style="width:100%; justify-content:center; padding:12px; margin-top:10px;">
-                        Lihat Keranjang
-                    </a>
-                </form>
-
+        <div style="margin-top:12px;">
+            <div class="summary-row">
+                <span>Subtotal</span>
+                <span>Rp {{ number_format($order->total_amount - $order->shipping_cost, 0, ',', '.') }}</span>
+            </div>
+            <div class="summary-row">
+                <span>Ongkir</span>
+                @if($order->shipping_cost > 0)
+                    <span>Rp {{ number_format($order->shipping_cost, 0, ',', '.') }}</span>
                 @else
-                {{-- BELUM LOGIN --}}
-                <p style="font-size:13px; color:var(--gray-600); margin-bottom:1.5rem;">
-                    Stok tersedia: <strong>{{ $product->stock }}</strong>
-                </p>
-                <a href="{{ route('login') }}" class="btn btn-dark" style="width:100%; justify-content:center; padding:14px;">
-                    Login untuk Membeli
-                </a>
-                @endauth
-
-                <div style="border-top:1px solid var(--gray-200); margin:2rem 0;"></div>
-
-                <div style="display:flex; flex-direction:column; gap:10px;">
-                    <div style="display:flex; gap:10px; font-size:13px; color:var(--gray-600);">
-                        <span>🚚</span><span>Free ongkir untuk pembelian di atas Rp 50.000</span>
-                    </div>
-                    <div style="display:flex; gap:10px; font-size:13px; color:var(--gray-600);">
-                        <span>↩️</span><span>Pengembalian mudah dalam 7 hari</span>
-                    </div>
-                    <div style="display:flex; gap:10px; font-size:13px; color:var(--gray-600);">
-                        <span>✅</span><span>Produk original & berkualitas</span>
-                    </div>
-                </div>
+                    <span class="badge-free">GRATIS</span>
+                @endif
+            </div>
+            <div class="summary-total">
+                <span>Total</span>
+                <span>Rp {{ number_format($order->total_amount, 0, ',', '.') }}</span>
             </div>
         </div>
     </div>
-</div>
 
-<style>
-input[type="radio"]:checked + .size-option {
-    border-color: var(--pink-600) !important;
-    background: var(--pink-50);
-    color: var(--pink-600);
-}
-input[type="radio"]:checked + .color-option span:first-child {
-    border-color: var(--pink-600) !important;
-    box-shadow: 0 0 0 3px rgba(201,79,124,0.25);
-}
-.size-option.disabled-size {
-    opacity: 0.35;
-    cursor: not-allowed;
-    text-decoration: line-through;
-}
-.color-label.hidden-color { display: none; }
-</style>
+    {{-- ALAMAT --}}
+    <div class="od-card">
+        <div class="od-card-title">📍 Alamat Pengiriman</div>
+        <p style="font-size:14px; color:var(--gray-700); line-height:1.6; margin:0;">{{ $order->shipping_address }}</p>
+        @if($order->courier)
+        <p style="font-size:13px; color:var(--gray-400); margin-top:8px;">🚚 Kurir: {{ $order->courier }}</p>
+        @endif
+    </div>
 
-<script>
-const stockMap = @json($stockMap);
-const allVariants = @json($allVariants->map(fn($v) => ['size' => $v->size, 'color' => $v->color, 'stock' => $v->stock])->values());
+    {{-- PEMBAYARAN --}}
+    <div class="od-card">
+        <div class="od-card-title">💳 Informasi Pembayaran</div>
+        <div class="summary-row">
+            <span>Metode</span>
+            <span style="font-weight:600; color:var(--gray-800);">{{ ucfirst($order->payment_method) }}</span>
+        </div>
+        <div class="summary-row">
+            <span>Status</span>
+            <span class="badge {{ $order->payment_status === 'paid' ? 'badge-paid' : ($order->payment_status === 'refunded' ? 'badge-refunded' : 'badge-unpaid') }}">
+                {{ $order->payment_status === 'paid' ? '💳 Lunas' : ($order->payment_status === 'refunded' ? '↩️ Direfund' : '⚠️ Belum Bayar') }}
+            </span>
+        </div>
 
-function getSelectedSize() {
-    const checked = document.querySelector('input[name="size"]:checked');
-    return checked ? checked.value : '';
-}
+        @if($order->payment && $order->payment->proof_image)
+        <div style="margin-top:1rem; border-top:1px solid var(--gray-100); padding-top:1rem;">
+            <p style="font-size:13px; font-weight:600; color:var(--gray-700); margin-bottom:8px;">Bukti Pembayaran</p>
+            <img src="{{ asset('storage/' . $order->payment->proof_image) }}"
+                 style="width:100%; max-width:300px; border-radius:10px; border:1px solid var(--gray-200);">
+        </div>
+        @endif
+    </div>
 
-function getSelectedColor() {
-    const checked = document.querySelector('input[name="color"]:checked');
-    return checked ? checked.value : '';
-}
+    {{-- RETURN --}}
+    @if($order->returnRequest)
+    <div class="od-card">
+        <div class="od-card-title">↩️ Request Return</div>
+        <div class="summary-row">
+            <span>Status</span>
+            <span class="badge {{ $order->returnRequest->status === 'approved' ? 'badge-delivered' : ($order->returnRequest->status === 'rejected' ? 'badge-cancelled' : 'badge-pending') }}">
+                {{ ucfirst($order->returnRequest->status) }}
+            </span>
+        </div>
+        <div class="summary-row" style="flex-direction:column; align-items:flex-start; gap:4px;">
+            <span>Alasan</span>
+            <span style="color:var(--gray-700); font-weight:500;">{{ $order->returnRequest->reason }}</span>
+        </div>
+        @if($order->returnRequest->status === 'rejected' && $order->returnRequest->admin_note)
+        <div class="summary-row" style="flex-direction:column; align-items:flex-start; gap:4px;">
+            <span>Catatan Admin</span>
+            <span style="color:#991b1b; font-weight:500;">{{ $order->returnRequest->admin_note }}</span>
+        </div>
+        @endif
+    </div>
+    @endif
 
-function getStock(size, color) {
-    const key = (size || '') + '||' + (color || '');
-    return stockMap[key] ?? null;
-}
+    {{-- ACTIONS --}}
+    <div class="od-actions">
 
-function updateColorOptions(selectedSize) {
-    const colorLabels = document.querySelectorAll('.color-label');
-    let firstAvailable = null;
+        {{-- Tombol Bayar: muncul kalau belum bayar dan belum dibatalkan --}}
+        @if($order->payment_status === 'unpaid' && $order->status !== 'cancelled')
+        <a href="{{ route('payment', $order->id) }}" class="btn btn-primary" style="flex:1; justify-content:center;">
+            💳 Bayar Sekarang
+        </a>
+        @endif
 
-    colorLabels.forEach(label => {
-        const color = label.getAttribute('data-color');
-        const stock = getStock(selectedSize, color);
-        const available = stock !== null && stock > 0;
+        {{-- Tombol Batalkan: muncul HANYA kalau belum bayar (unpaid) dan status masih pending/processing --}}
+        @if($order->payment_status === 'unpaid' && in_array($order->status, ['pending', 'processing']))
+        <form method="POST" action="{{ route('orders.cancel', $order->id) }}" style="flex:1;" onsubmit="return confirm('Yakin ingin membatalkan pesanan ini?')">
+            @csrf
+            <button type="submit" style="width:100%; padding:12px; background:white; color:#dc2626; border:1.5px solid #fecaca; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer;">
+                ❌ Batalkan Pesanan
+            </button>
+        </form>
+        @endif
 
-        if (available) {
-            label.classList.remove('hidden-color');
-            if (!firstAvailable) firstAvailable = label;
-        } else {
-            label.classList.add('hidden-color');
-            const radio = label.querySelector('input[type="radio"]');
-            if (radio && radio.checked) radio.checked = false;
-        }
-    });
-
-    if (firstAvailable) {
-        const radio = firstAvailable.querySelector('input[type="radio"]');
-        if (radio) radio.checked = true;
-    }
-
-    updateStockInfo();
-}
-
-function onSizeChange(size) {
-    updateColorOptions(size);
-}
-
-function onColorChange(color) {
-    updateStockInfo();
-}
-
-function updateStockInfo() {
-    const size  = getSelectedSize();
-    const color = getSelectedColor();
-    const stock = getStock(size, color);
-    const stockEl = document.getElementById('stock-count');
-    const qtyInput = document.getElementById('qty');
-    const btnCart = document.getElementById('btn-cart');
-    const btnBuy  = document.getElementById('btn-buy');
-
-    if (stock === null || stock === undefined) {
-        if (stockEl) { stockEl.textContent = '—'; stockEl.style.color = 'var(--gray-400)'; }
-    } else if (stock <= 0) {
-        if (stockEl) { stockEl.textContent = 'Habis'; stockEl.style.color = '#dc2626'; }
-        if (qtyInput) qtyInput.max = 0;
-        if (btnCart) { btnCart.disabled = true; btnCart.style.opacity = '0.4'; }
-        if (btnBuy)  { btnBuy.disabled  = true; btnBuy.style.opacity  = '0.4'; }
-    } else {
-        if (stockEl) { stockEl.textContent = stock + ' pcs'; stockEl.style.color = stock <= 5 ? '#f59e0b' : 'var(--gray-800)'; }
-        if (qtyInput) {
-            qtyInput.max = stock;
-            if (parseInt(qtyInput.value) > stock) qtyInput.value = stock;
-        }
-        if (btnCart) { btnCart.disabled = false; btnCart.style.opacity = '1'; }
-        if (btnBuy)  { btnBuy.disabled  = false; btnBuy.style.opacity  = '1'; }
-    }
-}
-
-function changeQty(delta) {
-    const input = document.getElementById('qty');
-    let val = parseInt(input.value) + delta;
-    const max = parseInt(input.max) || 99;
-    if (val < 1) val = 1;
-    if (val > max) val = max;
-    input.value = val;
-}
-
-document.addEventListener('DOMContentLoaded', function() {
-    const firstSize = document.querySelector('input[name="size"]:checked');
-    if (firstSize) {
-        updateColorOptions(firstSize.value);
-    } else {
-        updateStockInfo();
-    }
-});
-</script>
-
-@endsection
+        {{-- Info: sudah bayar, tidak bisa dibatalkan --}}
+        @if($order->payment_status === 'paid' && in_array($order->status,

@@ -32,4 +32,9 @@ class Order extends Model
     {
         return $this->hasOne(Payment::class)->latest();
     }
+
+    public function returnRequest()
+    {
+        return $this->hasOne(ReturnRequest::class);
+    }
 }

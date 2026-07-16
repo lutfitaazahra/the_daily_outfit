@@ -103,7 +103,7 @@
 
                     <div class="cart-img">
                         @if($item->product->image)
-                            <img src="{{ asset('storage/' . $item->product->image) }}" alt="{{ $item->product->name }}">
+                            <img src="{{ str_starts_with($item->product->image, 'http') ? $item->product->image : asset('storage/' . $item->product->image) }}" alt="{{ $item->product->name }}">
                         @else
                             <span class="cart-img-placeholder">{{ mb_substr($item->product->name, 0, 2) }}</span>
                         @endif
