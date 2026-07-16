@@ -236,7 +236,7 @@
         @if($order->payment && $order->payment->proof_image)
         <div style="margin-top:1rem; border-top:1px solid var(--gray-100); padding-top:1rem;">
             <p style="font-size:13px; font-weight:600; color:var(--gray-700); margin-bottom:8px;">Bukti Pembayaran</p>
-            <img src="{{ asset('storage/' . $order->payment->proof_image) }}"
+            <img src="{{ str_starts_with($order->payment->proof_image, 'http') ? $order->payment->proof_image : asset('storage/' . $order->payment->proof_image) }}"
                  style="width:100%; max-width:300px; border-radius:10px; border:1px solid var(--gray-200);">
         </div>
         @endif
