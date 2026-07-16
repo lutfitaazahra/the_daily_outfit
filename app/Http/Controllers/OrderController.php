@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Order;
 use App\Models\Payment;
+use App\Helpers\CloudinaryHelper;
 
 class OrderController extends Controller
 {
@@ -47,7 +48,7 @@ class OrderController extends Controller
 
         $proof = '';
         if ($request->hasFile('proof_image')) {
-            $proof = $request->file('proof_image')->store('proofs', 'public');
+            $proof = CloudinaryHelper::upload($request->file('proof_image')->getRealPath(), 'payments');
         }
 
         Payment::create([
