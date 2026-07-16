@@ -47,6 +47,7 @@
 .badge-shipped    { background: #e0f2fe; color: #0369a1; }
 .badge-delivered  { background: #dcfce7; color: #166534; }
 .badge-cancelled  { background: #fee2e2; color: #991b1b; }
+.badge-returned   { background: #ede9fe; color: #5b21b6; }
 .badge-paid       { background: #dcfce7; color: #166534; }
 .badge-unpaid     { background: #fff7ed; color: #9a3412; }
 
@@ -128,6 +129,7 @@
         'shipped'    => ['🚚 Dikirim',   'badge-shipped'],
         'delivered'  => ['✅ Selesai',   'badge-delivered'],
         'cancelled'  => ['❌ Dibatalkan','badge-cancelled'],
+        'returned'   => ['↩️ Direturn',  'badge-returned'],
     ];
     @endphp
 
