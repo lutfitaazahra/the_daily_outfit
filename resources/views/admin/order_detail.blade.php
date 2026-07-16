@@ -19,8 +19,17 @@
 @endif
 
 @php
-$statusLabels = ['pending'=>['Pending','pill-pending'],'processing'=>['Diproses','pill-processing'],'shipped'=>['Dikirim','pill-shipped'],'delivered'=>['Selesai','pill-delivered'],'cancelled'=>['Batal','pill-cancelled']];
-$badge = $statusLabels[$order->status] ?? ['Unknown','pill-pending'];
+// Membersihkan spasi dan mengubah status ke huruf kecil agar terhindar dari error "Unknown"
+$cleanStatus = trim(strtolower($order->status));
+
+$statusLabels = [
+    'pending'    => ['Pending', 'pill-pending'],
+    'processing' => ['Diproses', 'pill-processing'],
+    'shipped'    => ['Dikirim', 'pill-shipped'],
+    'delivered'  => ['Selesai', 'pill-delivered'],
+    'cancelled'  => ['Batal', 'pill-cancelled']
+];
+$badge = $statusLabels[$cleanStatus] ?? ['Unknown', 'pill-pending'];
 @endphp
 
 <!-- STATUS BAR -->
@@ -61,11 +70,11 @@ $badge = $statusLabels[$order->status] ?? ['Unknown','pill-pending'];
                     <div style="width:48px; height:48px; border-radius:50%; background:#fff0f3;
                                 display:flex; align-items:center; justify-content:center;
                                 font-weight:700; font-size:18px; color:#c94f7c; flex-shrink:0;">
-                        {{ mb_strtoupper(mb_substr($order->user->name, 0, 1)) }}
+                        {{ mb_strtoupper(mb_substr($order->user->name ?? 'C', 0, 1)) }}
                     </div>
                     <div>
-                        <div style="font-size:15px; font-weight:700; color:#3a2a2d;">{{ $order->user->name }}</div>
-                        <div style="font-size:13px; color:#b09098;">{{ $order->user->email }}</div>
+                        <div style="font-size:15px; font-weight:700; color:#3a2a2d;">{{ $order->user->name ?? 'Guest' }}</div>
+                        <div style="font-size:13px; color:#b09098;">{{ $order->user->email ?? '-' }}</div>
                         <div style="font-size:13px; color:#b09098;">{{ $order->user->phone ?? '-' }}</div>
                     </div>
                 </div>
@@ -90,14 +99,13 @@ $badge = $statusLabels[$order->status] ?? ['Unknown','pill-pending'];
             </div>
             <div style="padding:1rem 1.5rem;">
                 @foreach($order->items as $item)
-                <div style="display:flex; align-items:center; gap:1rem; padding:12px 0;
-                            border-bottom:1px solid #f3e9eb;">
+                <div style="display:flex; align-items:center; gap:1rem; padding:12px 0; border-bottom:1px solid #f3e9eb;">
                     <div style="width:52px; height:52px; border-radius:10px; overflow:hidden;
                                 background:#fff0f3; flex-shrink:0; display:flex; align-items:center; justify-content:center;">
                         @if($item->product && $item->product->image)
-                        <img src="{{ str_starts_with($item->product->image, 'http') ? $item->product->image : asset('storage/' . $item->product->image) }}" style="width:100%; height:100%; object-fit:cover;">
+                            <img src="{{ str_starts_with($item->product->image, 'http') ? $item->product->image : asset('storage/' . $item->product->image) }}" style="width:100%; height:100%; object-fit:cover;">
                         @else
-                        <span style="font-size:20px;">👗</span>
+                            <span style="font-size:20px;">👗</span>
                         @endif
                     </div>
                     <div style="flex:1;">
@@ -139,11 +147,9 @@ $badge = $statusLabels[$order->status] ?? ['Unknown','pill-pending'];
                     @csrf
                     <div style="margin-bottom:1rem;">
                         <label style="font-size:12px; font-weight:600; color:#b09098; text-transform:uppercase; letter-spacing:1px; display:block; margin-bottom:8px;">Status Pesanan</label>
-                        <select name="status"
-                                style="width:100%; padding:10px 14px; border:1.5px solid #f3d9e0; border-radius:10px;
-                                       font-size:14px; color:#5a3825; background:white; cursor:pointer;">
+                        <select name="status" style="width:100%; padding:10px 14px; border:1.5px solid #f3d9e0; border-radius:10px; font-size:14px; color:#5a3825; background:white; cursor:pointer;">
                             @foreach(['pending'=>'Pending','processing'=>'Diproses','shipped'=>'Dikirim','delivered'=>'Selesai','cancelled'=>'Batal'] as $val => $label)
-                            <option value="{{ $val }}" {{ $order->status === $val ? 'selected' : '' }}>{{ $label }}</option>
+                            <option value="{{ $val }}" {{ $cleanStatus === $val ? 'selected' : '' }}>{{ $label }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -158,7 +164,7 @@ $badge = $statusLabels[$order->status] ?? ['Unknown','pill-pending'];
                     @php
                     $steps = ['pending'=>'📋 Pending','processing'=>'⚙️ Diproses','shipped'=>'🚚 Dikirim','delivered'=>'✅ Selesai'];
                     $stepKeys = array_keys($steps);
-                    $currentIdx = array_search($order->status, $stepKeys);
+                    $currentIdx = array_search($cleanStatus, $stepKeys);
                     @endphp
                     @foreach($steps as $key => $label)
                     @php $idx = array_search($key, $stepKeys); $done = $currentIdx !== false && $idx <= $currentIdx; @endphp
@@ -208,64 +214,6 @@ $badge = $statusLabels[$order->status] ?? ['Unknown','pill-pending'];
                 @endif
             </div>
         </div>
-
-        <!-- PENGAJUAN RETUR -->
-        @if($order->returnRequest)
-        @php
-        $ret = $order->returnRequest;
-        $retLabels = [
-            'pending'        => ['Menunggu Review', '#f59e0b'],
-            'approved'       => ['Disetujui', '#3b82f6'],
-            'rejected'       => ['Ditolak', '#ef4444'],
-            'item_received'  => ['Barang Diterima', '#8b5cf6'],
-            'refunded'       => ['Dana Dikembalikan', '#16a34a'],
-        ];
-        $retBadge = $retLabels[$ret->status] ?? ['Unknown', '#999'];
-        @endphp
-        <div class="admin-panel">
-            <div class="admin-panel-header">
-                <h3>↩️ Pengajuan Retur</h3>
-                <span style="font-size:12px; font-weight:700; color:{{ $retBadge[1] }};">{{ $retBadge[0] }}</span>
-            </div>
-            <div style="padding:1.5rem;">
-                <div style="font-size:12px; font-weight:600; color:#b09098; margin-bottom:6px;">ALASAN CUSTOMER</div>
-                <div style="font-size:14px; color:#5a4a4d; margin-bottom:1rem;">{{ $ret->reason }}</div>
-                @if($ret->proof_image)
-                <div style="font-size:12px; font-weight:600; color:#b09098; margin-bottom:6px;">BUKTI FOTO</div>
-                <img src="{{ asset('storage/' . $ret->proof_image) }}" style="width:100%; border-radius:10px; margin-bottom:1rem;">
-                @endif
-                @if($ret->admin_note)
-                <div style="background:#fffbeb; border-radius:10px; padding:1rem; border:1px solid #fde68a; margin-bottom:1rem;">
-                    <div style="font-size:12px; font-weight:600; color:#92400e; margin-bottom:4px;">📝 Catatan Admin</div>
-                    <div style="font-size:13px; color:#78350f;">{{ $ret->admin_note }}</div>
-                </div>
-                @endif
-                @if($ret->status === 'pending')
-                    <form method="POST" action="{{ route('admin.returns.approve', $ret->id) }}" style="margin-bottom:8px;">
-                        @csrf
-                        <button type="submit" class="abtn abtn-pink" style="width:100%; justify-content:center; padding:12px;">✓ Setujui Retur</button>
-                    </form>
-                    <form method="POST" action="{{ route('admin.returns.reject', $ret->id) }}">
-                        @csrf
-                        <textarea name="admin_note" placeholder="Alasan penolakan (opsional)" style="width:100%; padding:10px; border:1.5px solid #f3d9e0; border-radius:10px; margin-bottom:8px;"></textarea>
-                        <button type="submit" class="abtn abtn-outline" style="width:100%; justify-content:center; padding:12px;">✗ Tolak Retur</button>
-                    </form>
-                @elseif($ret->status === 'approved')
-                    <form method="POST" action="{{ route('admin.returns.item-received', $ret->id) }}">
-                        @csrf
-                        <button type="submit" class="abtn abtn-pink" style="width:100%; justify-content:center; padding:12px;">📦 Tandai Barang Sudah Diterima</button>
-                    </form>
-                @elseif($ret->status === 'item_received')
-                    <form method="POST" action="{{ route('admin.returns.refund', $ret->id) }}">
-                        @csrf
-                        <button type="submit" class="abtn abtn-pink" style="width:100%; justify-content:center; padding:12px;">💰 Tandai Dana Sudah Dikembalikan</button>
-                    </form>
-                @else
-                    <div style="font-size:13px; color:#b09098;">Retur sudah final ({{ $retBadge[0] }}).</div>
-                @endif
-            </div>
-        </div>
-        @endif
 
     </div>
 </div>

@@ -68,26 +68,27 @@
         return $output;
     }
 
+    // Semua key dalam colorMap diubah menjadi lowercase saat pengecekan di bawah
     $colorMap = [
-        'Hitam'=>'#1a1a1a','Putih'=>'#f5f5f5','Abu'=>'#9ca3af','Grey'=>'#9ca3af',
-        'Navy'=>'#1e3a5f','Coklat'=>'#92400e','Krem'=>'#f5e6c8','Pink'=>'#f9a8d4',
-        'Merah'=>'#dc2626','Biru'=>'#3b82f6','Hijau'=>'#22c55e','Kuning'=>'#fbbf24',
-        'Ungu'=>'#a855f7','Orange'=>'#f97316','Maroon'=>'#7f1d1d','Dusty Pink'=>'#e8a0a0',
-        'Sage'=>'#87a878','Sage Green'=>'#87a878','Lavender'=>'#c4b5fd','Camel'=>'#c19a6b',
-        'Olive'=>'#6b7c3a','Olive Green'=>'#6b7c3a','Tosca'=>'#2dd4bf','Beige'=>'#e8d5b7',
-        'Oat Cream'=>'#f5ede0','Harbor Green'=>'#4a7c6f','Sky Blue'=>'#7dd3fc',
-        'Lilac'=>'#c4b5fd','Charcoal'=>'#374151','Emerald Green'=>'#059669',
-        'Dusty Blue'=>'#7096a8','Ash Blue'=>'#8fa3b1','Ocean Blue'=>'#0369a1',
-        'Dusty Yellow'=>'#f0d060','Atlantic Sea'=>'#1e6b8a','Rose Gold'=>'#b76e79',
-        'Gold'=>'#d4a017','Silver'=>'#c0c0c0','Butter Yellow'=>'#f5d060',
-        'Butteryellow'=>'#f5d060','Mahogany'=>'#c04000','Biru Denim'=>'#1560bd',
-        'Denim'=>'#1560bd','Cream'=>'#fffdd0','Mocca'=>'#6f4e37','Teal'=>'#008080',
-        'Mustard'=>'#e3a857','Terracotta'=>'#e2725b','Burgundy'=>'#800020',
-        'Pastel Pink'=>'#ffb6c1','Pastel Blue'=>'#aec6cf','Pastel Green'=>'#b5ead7',
-        'Pastel Yellow'=>'#fdfd96','Pastel Purple'=>'#d8b4fe','Abu-Abu'=>'#9ca3af',
-        'Cokelat'=>'#92400e','Kopi'=>'#6f4e37','Khaki'=>'#c3b091','Tan'=>'#d2b48c',
-        'Baby Pink'=>'#ffb6c1','Soft Blue'=>'#aec6cf','Soft Pink'=>'#ffb6c1',
-        'Soft Green'=>'#b5ead7','Baby Blue'=>'#aec6cf','Coksu'=>'#8B7355',
+        'hitam'=>'#1a1a1a','putih'=>'#f5f5f5','abu'=>'#9ca3af','grey'=>'#9ca3af',
+        'navy'=>'#1e3a5f','coklat'=>'#92400e','krem'=>'#f5e6c8','pink'=>'#f9a8d4',
+        'merah'=>'#dc2626','biru'=>'#3b82f6','hijau'=>'#22c55e','kuning'=>'#fbbf24',
+        'ungu'=>'#a855f7','orange'=>'#f97316','maroon'=>'#7f1d1d','dusty pink'=>'#e8a0a0',
+        'sage'=>'#87a878','sage green'=>'#87a878','lavender'=>'#c4b5fd','camel'=>'#c19a6b',
+        'olive'=>'#6b7c3a','olive green'=>'#6b7c3a','tosca'=>'#2dd4bf','beige'=>'#e8d5b7',
+        'oat cream'=>'#f5ede0','harbor green'=>'#4a7c6f','sky blue'=>'#7dd3fc',
+        'lilac'=>'#c4b5fd','charcoal'=>'#374151','emerald green'=>'#059669',
+        'dusty blue'=>'#7096a8','ash blue'=>'#8fa3b1','ocean blue'=>'#0369a1',
+        'dusty yellow'=>'#f0d060','atlantic sea'=>'#1e6b8a','rose gold'=>'#b76e79',
+        'gold'=>'#d4a017','silver'=>'#c0c0c0','butter yellow'=>'#f5d060',
+        'butteryellow'=>'#f5d060','mahogany'=>'#c04000','biru denim'=>'#1560bd',
+        'denim'=>'#1560bd','cream'=>'#fffdd0','mocca'=>'#6f4e37','teal'=>'#008080',
+        'mustard'=>'#e3a857','terracotta'=>'#e2725b','burgundy'=>'#800020',
+        'pastel pink'=>'#ffb6c1','pastel blue'=>'#aec6cf','pastel green'=>'#b5ead7',
+        'pastel yellow'=>'#fdfd96','pastel purple'=>'#d8b4fe','abu-abu'=>'#9ca3af',
+        'cokelat'=>'#92400e','kopi'=>'#6f4e37','khaki'=>'#c3b091','tan'=>'#d2b48c',
+        'baby pink'=>'#ffb6c1','soft blue'=>'#aec6cf','soft pink'=>'#ffb6c1',
+        'soft green'=>'#b5ead7','baby blue'=>'#aec6cf','coksu'=>'#8B7355',
     ];
 @endphp
 
@@ -201,8 +202,8 @@
                             <div style="display:flex; gap:10px; flex-wrap:wrap;" id="color-picker">
                                 @foreach($uniqueColors as $color)
                                 @php
-                                    $colorKey = collect($colorMap)->keys()->first(fn($k) => strtolower($k) === strtolower($color));
-                                    $hex = $colorKey ? $colorMap[$colorKey] : ('#' . substr(md5(strtolower($color)), 0, 6));
+                                    $searchKey = strtolower(trim($color));
+                                    $hex = array_key_exists($searchKey, $colorMap) ? $colorMap[$searchKey] : ('#' . substr(md5($searchKey), 0, 6));
                                 @endphp
                                 <label style="cursor:pointer;" class="color-label" data-color="{{ $color }}">
                                     <input type="radio" name="color" value="{{ $color }}" style="display:none;"
@@ -379,15 +380,6 @@ function updateStockInfo() {
         if (btnCart) { btnCart.disabled = false; btnCart.style.opacity = '1'; }
         if (btnBuy)  { btnBuy.disabled  = false; btnBuy.style.opacity  = '1'; }
     }
-}
-
-function changeQty(delta) {
-    const input = document.getElementById('qty');
-    let val = parseInt(input.value) + delta;
-    const max = parseInt(input.max) || 99;
-    if (val < 1) val = 1;
-    if (val > max) val = max;
-    input.value = val;
 }
 
 document.addEventListener('DOMContentLoaded', function() {
