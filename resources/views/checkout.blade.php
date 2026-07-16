@@ -187,7 +187,7 @@
             <div style="display:flex; align-items:center; gap:1rem; padding:10px 0; border-bottom:1px solid var(--gray-100);">
                 <div style="width:48px; height:48px; border-radius:8px; overflow:hidden; background:var(--pink-50); flex-shrink:0;">
                     @if($item->product->image)
-                    <img src="{{ asset('storage/' . $item->product->image) }}" style="width:100%; height:100%; object-fit:cover;">
+                    <img src="{{ str_starts_with($item->product->image, 'http') ? $item->product->image : asset('storage/' . $item->product->image) }}" style="width:100%; height:100%; object-fit:cover;">
                     @else
                     <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:18px;">👗</div>
                     @endif
