@@ -105,6 +105,8 @@ class CheckoutController extends Controller
             'payment_method'   => $request->payment_method,
             'shipping_address' => $request->address,
             'notes'            => $request->notes,
+            'status'           => 'pending',
+            'payment_status'   => 'unpaid',
         ]);
 
         foreach ($items as $item) {

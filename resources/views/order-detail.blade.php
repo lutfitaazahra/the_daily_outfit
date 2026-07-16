@@ -80,13 +80,6 @@
 .badge-free { background: #f0fdf4; color: #16a34a; font-size: 11px; font-weight: 700; padding: 2px 10px; border-radius: 50px; }
 
 .od-actions { display: flex; gap: 10px; margin-top: 1rem; flex-wrap: wrap; }
-
-.od-return-box {
-    padding: 12px; border-radius: 8px; font-size: 13px; font-weight: 600; text-align: center; flex: 1;
-}
-.od-return-pending  { background:#fff7ed; color:#9a3412; border:1.5px solid #fed7aa; }
-.od-return-approved { background:#f0fdf4; color:#166534; border:1.5px solid #bbf7d0; }
-.od-return-rejected { background:#fef2f2; color:#991b1b; border:1.5px solid #fecaca; }
 </style>
 
 <div class="od-wrap">
@@ -101,15 +94,27 @@
     @endif
 
     @php
+    $dbStatus = isset($order->status) ? strtolower(trim($order->status)) : 'pending';
+    
     $statusLabels = [
-        'pending'    => ['⏳ Menunggu',  'badge-pending'],
-        'processing' => ['🔄 Diproses',  'badge-processing'],
-        'shipped'    => ['🚚 Dikirim',   'badge-shipped'],
-        'delivered'  => ['✅ Selesai',   'badge-delivered'],
-        'cancelled'  => ['❌ Dibatalkan','badge-cancelled'],
-        'returned'   => ['↩️ Direturn',  'badge-returned'],
+        'pending'    => ['⏳ Menunggu Pembayaran', 'badge-pending'],
+        'unpaid'     => ['⏳ Menunggu Pembayaran', 'badge-pending'],
+        'diproses'   => ['🔄 Sedang Diproses',   'badge-processing'],
+        'processing' => ['🔄 Sedang Diproses',   'badge-processing'],
+        'dikirim'    => ['🚚 Sedang Dikirim',    'badge-shipped'],
+        'shipped'    => ['🚚 Sedang Dikirim',    'badge-shipped'],
+        'selesai'    => ['✅ Pesanan Selesai',    'badge-delivered'],
+        'delivered'  => ['✅ Pesanan Selesai',    'badge-delivered'],
+        'batal'      => ['❌ Dibatalkan',        'badge-cancelled'],
+        'cancelled'  => ['❌ Dibatalkan',        'badge-cancelled'],
+        'returned'   => ['↩️ Direturn',           'badge-returned'],
     ];
-    $badge = $statusLabels[$order->status] ?? ['Unknown', 'badge-pending'];
+    
+    if (array_key_exists($dbStatus, $statusLabels)) {
+        $badge = $statusLabels[$dbStatus];
+    } else {
+        $badge = ['📦 ' . ucwords($order->status), 'badge-processing'];
+    }
     @endphp
 
     <div class="od-header">
@@ -125,19 +130,25 @@
         </div>
     </div>
 
-    @if($order->status !== 'cancelled' && $order->status !== 'returned')
+    @if($dbStatus !== 'cancelled' && $dbStatus !== 'batal' && $dbStatus !== 'returned')
     {{-- TIMELINE STATUS --}}
     <div class="od-card">
         <div class="od-card-title">📍 Status Pesanan</div>
         @php
         $steps = [
             'pending'    => ['📋', 'Pesanan Dibuat', 'Pesanan kamu sedang menunggu konfirmasi pembayaran.'],
-            'processing' => ['⚙️', 'Diproses', 'Pesanan kamu sedang disiapkan oleh penjual.'],
-            'shipped'    => ['🚚', 'Dikirim', 'Pesanan dalam perjalanan ke alamat kamu.'],
-            'delivered'  => ['✅', 'Selesai', 'Pesanan telah tiba di tujuan.'],
+            'diproses'   => ['⚙️', 'Diproses', 'Pesanan kamu sedang disiapkan oleh penjual.'],
+            'dikirim'    => ['🚚', 'Dikirim', 'Pesanan dalam perjalanan ke alamat kamu.'],
+            'selesai'    => ['✅', 'Selesai', 'Pesanan telah tiba di tujuan.'],
         ];
+
+        $normalizedStatus = $dbStatus;
+        if($dbStatus === 'processing') $normalizedStatus = 'diproses';
+        if($dbStatus === 'shipped') $normalizedStatus = 'dikirim';
+        if($dbStatus === 'delivered') $normalizedStatus = 'selesai';
+
         $stepKeys = array_keys($steps);
-        $currentIdx = array_search($order->status, $stepKeys);
+        $currentIdx = array_search($normalizedStatus, $stepKeys);
         @endphp
         <div class="od-timeline">
             @foreach($steps as $key => [$icon, $title, $desc])
@@ -158,15 +169,10 @@
             @endforeach
         </div>
     </div>
-    @elseif($order->status === 'cancelled')
+    @elseif($dbStatus === 'cancelled' || $dbStatus === 'batal')
     <div class="od-card" style="background:#fef2f2; border:1px solid #fecaca;">
         <div style="font-size:14px; font-weight:600; color:#991b1b;">❌ Pesanan ini telah dibatalkan</div>
         <p style="font-size:12px; color:#b91c1c; margin-top:4px;">Hubungi admin jika kamu merasa ini sebuah kesalahan.</p>
-    </div>
-    @elseif($order->status === 'returned')
-    <div class="od-card" style="background:#f5f3ff; border:1px solid #ddd6fe;">
-        <div style="font-size:14px; font-weight:600; color:#5b21b6;">↩️ Pesanan ini telah direturn</div>
-        <p style="font-size:12px; color:#6d28d9; margin-top:4px;">Dana akan dikembalikan sesuai kebijakan toko.</p>
     </div>
     @endif
 
@@ -177,9 +183,15 @@
         <div class="od-item-row">
             <div class="od-item-img">
                 @if($item->product && $item->product->image)
-                <img src="{{ str_starts_with($item->product->image, 'http') ? $item->product->image : asset('storage/' . $item->product->image) }}">
+                    @php
+                        $imagePath = $item->product->image;
+                    @endphp
+                    {{-- Mencoba mencari gambar di storage, jika gagal pindah ke asset public biasa --}}
+                    <img src="{{ str_starts_with($imagePath, 'http') ? $imagePath : (file_exists(public_path('storage/' . $imagePath)) ? asset('storage/' . $imagePath) : asset($imagePath)) }}" 
+                         alt="{{ $item->product->name ?? 'Produk' }}"
+                         onerror="this.onerror=null; this.src='{{ asset('storage/products/' . $imagePath) }}';">
                 @else
-                <span style="font-size:18px;">👗</span>
+                    <span style="font-size:18px;">👗</span>
                 @endif
             </div>
             <div style="flex:1;">
@@ -232,70 +244,13 @@
                 {{ $order->payment_status === 'paid' ? '💳 Lunas' : ($order->payment_status === 'refunded' ? '↩️ Direfund' : '⚠️ Belum Bayar') }}
             </span>
         </div>
-
-        @if($order->payment && $order->payment->proof_image)
-        <div style="margin-top:1rem; border-top:1px solid var(--gray-100); padding-top:1rem;">
-            <p style="font-size:13px; font-weight:600; color:var(--gray-700); margin-bottom:8px;">Bukti Pembayaran</p>
-            <img src="{{ str_starts_with($order->payment->proof_image, 'http') ? $order->payment->proof_image : asset('storage/' . $order->payment->proof_image) }}"
-                 style="width:100%; max-width:300px; border-radius:10px; border:1px solid var(--gray-200);">
-        </div>
-        @endif
     </div>
-
-    {{-- RETURN --}}
-    @if($order->returnRequest)
-    <div class="od-card">
-        <div class="od-card-title">↩️ Request Return</div>
-        <div class="summary-row">
-            <span>Status</span>
-            <span class="badge {{ $order->returnRequest->status === 'approved' ? 'badge-delivered' : ($order->returnRequest->status === 'rejected' ? 'badge-cancelled' : 'badge-pending') }}">
-                {{ ucfirst($order->returnRequest->status) }}
-            </span>
-        </div>
-        <div class="summary-row" style="flex-direction:column; align-items:flex-start; gap:4px;">
-            <span>Alasan</span>
-            <span style="color:var(--gray-700); font-weight:500;">{{ $order->returnRequest->reason }}</span>
-        </div>
-        @if($order->returnRequest->status === 'rejected' && $order->returnRequest->admin_note)
-        <div class="summary-row" style="flex-direction:column; align-items:flex-start; gap:4px;">
-            <span>Catatan Admin</span>
-            <span style="color:#991b1b; font-weight:500;">{{ $order->returnRequest->admin_note }}</span>
-        </div>
-        @endif
-    </div>
-    @endif
 
     {{-- ACTIONS --}}
     <div class="od-actions">
-
-        {{-- Tombol Bayar: muncul kalau belum bayar dan belum dibatalkan --}}
-        @if($order->payment_status === 'unpaid' && $order->status !== 'cancelled')
+        @if($order->payment_status === 'unpaid' && !in_array($dbStatus, ['cancelled', 'batal']))
         <a href="{{ route('payment', $order->id) }}" class="btn btn-primary" style="flex:1; justify-content:center;">
             💳 Bayar Sekarang
-        </a>
-        @endif
-
-        {{-- Tombol Batalkan: muncul HANYA kalau belum bayar (unpaid) dan status masih pending/processing --}}
-        @if($order->payment_status === 'unpaid' && in_array($order->status, ['pending', 'processing']))
-        <form method="POST" action="{{ route('orders.cancel', $order->id) }}" style="flex:1;" onsubmit="return confirm('Yakin ingin membatalkan pesanan ini?')">
-            @csrf
-            <button type="submit" style="width:100%; padding:12px; background:white; color:#dc2626; border:1.5px solid #fecaca; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer;">
-                ❌ Batalkan Pesanan
-            </button>
-        </form>
-        @endif
-
-        {{-- Info: sudah bayar, tidak bisa dibatalkan --}}
-        @if($order->payment_status === 'paid' && in_array($order->status, ['pending', 'processing']))
-        <div style="flex:1; padding:12px; background:#fff7ed; color:#9a3412; border:1.5px solid #fed7aa; border-radius:8px; font-size:13px; font-weight:600; text-align:center;">
-            ℹ️ Pesanan tidak bisa dibatalkan setelah pembayaran dikonfirmasi
-        </div>
-        @endif
-
-        {{-- Tombol Ajukan Return: muncul kalau status delivered dan belum pernah return --}}
-        @if($order->status === 'delivered' && !$order->returnRequest)
-        <a href="{{ route('returns.create', $order->id) }}" class="btn btn-primary" style="flex:1; justify-content:center; background:#7c3aed; border-color:#7c3aed;">
-            ↩️ Ajukan Return
         </a>
         @endif
 

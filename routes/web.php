@@ -73,4 +73,6 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/returns', [ReturnController::class, 'adminIndex'])->name('returns.index');
     Route::post('/returns/{return}/approve', [ReturnController::class, 'approve'])->name('returns.approve');
     Route::post('/returns/{return}/reject', [ReturnController::class, 'reject'])->name('returns.reject');
+    Route::post('/returns/{return}/item-received', [ReturnController::class, 'markItemReceived'])->name('returns.item-received');
+    Route::post('/returns/{return}/refund', [ReturnController::class, 'markRefunded'])->name('returns.refund');
 });

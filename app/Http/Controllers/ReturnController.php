@@ -10,7 +10,7 @@ class ReturnController extends Controller
 {
     /**
      * Tampilkan form pengajuan return.
-     * Dipanggil saat klik link "Ajukan Return" (GET /orders/{order}/return)
+     * GET /orders/{order}/return
      */
     public function create(Order $order)
     {
@@ -31,7 +31,7 @@ class ReturnController extends Controller
 
     /**
      * Simpan pengajuan return.
-     * Dipanggil saat submit form di halaman returns-create (POST /orders/{order}/return)
+     * POST /orders/{order}/return
      */
     public function store(Request $request, Order $order)
     {
@@ -63,7 +63,8 @@ class ReturnController extends Controller
             'status'      => 'pending',
         ]);
 
-        $order->update(['status' => 'returned']);
+        // PENTING: order->status TIDAK diubah. Order tetap 'delivered'.
+        // Status retur dilacak sepenuhnya lewat tabel returns sendiri.
 
         return redirect()->route('orders.detail', $order->id)
             ->with('success', 'Pengajuan return berhasil dikirim. Tim kami akan segera meninjaunya.');
@@ -78,14 +79,29 @@ class ReturnController extends Controller
         return view('admin.returns', compact('returns'));
     }
 
+    /**
+     * Admin setujui pengajuan retur.
+     */
     public function approve(ReturnRequest $return)
     {
+        if ($return->status !== 'pending') {
+            return back()->with('error', 'Retur ini sudah diproses sebelumnya.');
+        }
+
         $return->update(['status' => 'approved']);
-        return back()->with('success', 'Return disetujui.');
+
+        return back()->with('success', 'Return disetujui. Silakan tunggu barang dikirim balik oleh customer.');
     }
 
+    /**
+     * Admin tolak pengajuan retur.
+     */
     public function reject(Request $request, ReturnRequest $return)
     {
+        if ($return->status !== 'pending') {
+            return back()->with('error', 'Retur ini sudah diproses sebelumnya.');
+        }
+
         $request->validate(['admin_note' => 'nullable|string|max:1000']);
 
         $return->update([
@@ -94,5 +110,36 @@ class ReturnController extends Controller
         ]);
 
         return back()->with('success', 'Return ditolak.');
+    }
+
+    /**
+     * Admin tandai barang retur sudah diterima kembali.
+     */
+    public function markItemReceived(ReturnRequest $return)
+    {
+        if ($return->status !== 'approved') {
+            return back()->with('error', 'Retur ini belum disetujui atau sudah lebih lanjut prosesnya.');
+        }
+
+        $return->update(['status' => 'item_received']);
+
+        return back()->with('success', 'Barang retur ditandai sudah diterima.');
+    }
+
+    /**
+     * Admin tandai dana sudah dikembalikan ke customer. Ini status final.
+     */
+    public function markRefunded(ReturnRequest $return)
+    {
+        if ($return->status !== 'item_received') {
+            return back()->with('error', 'Barang retur belum ditandai diterima.');
+        }
+
+        $return->update(['status' => 'refunded']);
+
+        // Order payment_status ikut diupdate jadi refunded (kolom ini sudah ada di migration orders kamu)
+        $return->order->update(['payment_status' => 'refunded']);
+
+        return back()->with('success', 'Retur selesai. Dana sudah dikembalikan ke customer.');
     }
 }

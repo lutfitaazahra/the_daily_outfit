@@ -59,12 +59,13 @@
             <tbody>
             @php
             $statusLabels = [
-                'pending'    => ['Pending',  'pill-pending'],
-                'processing' => ['Diproses', 'pill-processing'],
-                'shipped'    => ['Dikirim',  'pill-shipped'],
-                'delivered'  => ['Selesai',  'pill-delivered'],
-                'cancelled'  => ['Batal',    'pill-cancelled'],
-            ];
+    'pending'    => ['Pending',   'pill-pending'],
+    'processing' => ['Diproses',  'pill-processing'],
+    'shipped'    => ['Dikirim',   'pill-shipped'],
+    'delivered'  => ['Selesai',   'pill-delivered'],
+    'cancelled'  => ['Batal',     'pill-cancelled'],
+    'returned'   => ['Direturn',  'pill-returned'],
+];
             $filteredOrders = request('status') ? $orders->where('status', request('status')) : $orders;
             @endphp
             @forelse($filteredOrders as $order)
