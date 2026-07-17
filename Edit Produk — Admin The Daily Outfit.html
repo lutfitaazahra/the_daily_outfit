@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<!-- saved from url=(0014)about:internet -->
+<html lang="id"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Produk — Admin The Daily Outfit</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com/">
+    <link href="./Edit Produk — Admin The Daily Outfit_files/css2" rel="stylesheet">
+    <link rel="stylesheet" href="./Edit Produk — Admin The Daily Outfit_files/app.css">
+    <style>
+        body { margin:0; font-family: var(--font-sans, 'Poppins', sans-serif); background:#faf7f8; }
+        .admin-wrapper { display:flex; min-height:100vh; }
+
+        /* SIDEBAR */
+        .admin-sidebar {
+            width:240px; background:linear-gradient(180deg, #fff0f3 0%, #fff 100%);
+            border-right:1px solid #f3d9e0; padding:1.5rem 1rem; flex-shrink:0;
+            display:flex; flex-direction:column; position:sticky; top:0; height:100vh;
+        }
+        .admin-sidebar-brand {
+            font-family: var(--font, 'Playfair Display', serif);
+            font-size:1.4rem; font-weight:700; color:var(--brown, #5a3825);
+            margin-bottom:0.25rem; padding:0 0.5rem;
+        }
+        .admin-sidebar-sub { font-size:11px; color:#c94f7c; letter-spacing:2px; text-transform:uppercase; padding:0 0.5rem; margin-bottom:2rem; font-weight:600; }
+        .admin-nav { display:flex; flex-direction:column; gap:4px; flex:1; }
+        .admin-nav a {
+            display:flex; align-items:center; gap:12px; padding:11px 14px;
+            border-radius:10px; color:#7a5a63; text-decoration:none;
+            font-size:14px; font-weight:500; transition:all 0.2s;
+        }
+        .admin-nav a:hover { background:#fff0f3; color:#c94f7c; }
+        .admin-nav a.active { background:#c94f7c; color:white; box-shadow:0 4px 12px rgba(201,79,124,0.25); }
+        .admin-nav .nav-icon { font-size:18px; width:22px; text-align:center; }
+        .admin-sidebar-footer { border-top:1px solid #f3d9e0; padding-top:1rem; margin-top:1rem; }
+        .admin-sidebar-footer a {
+            display:flex; align-items:center; gap:12px; padding:11px 14px;
+            border-radius:10px; color:#7a5a63; text-decoration:none; font-size:14px; font-weight:500;
+        }
+        .admin-sidebar-footer a:hover { background:#fff0f3; color:#c94f7c; }
+
+        /* MAIN */
+        .admin-main { flex:1; padding:2rem 2.5rem; min-width:0; }
+        .admin-topbar {
+            display:flex; align-items:center; justify-content:space-between;
+            margin-bottom:2rem; flex-wrap:wrap; gap:1rem;
+        }
+        .admin-topbar h1 {
+            font-family: var(--font, 'Playfair Display', serif);
+            font-size:1.8rem; font-weight:700; color:var(--brown, #5a3825); margin:0;
+        }
+        .admin-topbar p { font-size:13px; color:#9a8a8e; margin:4px 0 0; }
+        .admin-user-chip {
+            display:flex; align-items:center; gap:10px; background:white;
+            padding:8px 16px; border-radius:50px; box-shadow:0 2px 10px rgba(0,0,0,0.04);
+        }
+        .admin-user-avatar {
+            width:34px; height:34px; border-radius:50%; background:#c94f7c; color:white;
+            display:flex; align-items:center; justify-content:center; font-weight:600; font-size:14px;
+        }
+
+        /* STATS */
+        .admin-stats-grid {
+            display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));
+            gap:1.25rem; margin-bottom:2rem;
+        }
+        .admin-stat-card {
+            background:white; border-radius:16px; padding:1.5rem;
+            box-shadow:0 2px 12px rgba(0,0,0,0.04); position:relative; overflow:hidden;
+            transition:transform 0.2s, box-shadow 0.2s;
+        }
+        .admin-stat-card:hover { transform:translateY(-3px); box-shadow:0 8px 24px rgba(201,79,124,0.12); }
+        .admin-stat-icon {
+            width:48px; height:48px; border-radius:14px; display:flex; align-items:center;
+            justify-content:center; font-size:22px; margin-bottom:1rem;
+        }
+        .admin-stat-label { font-size:12px; color:#9a8a8e; font-weight:500; text-transform:uppercase; letter-spacing:1px; }
+        .admin-stat-value { font-family: var(--font, 'Playfair Display', serif); font-size:1.6rem; font-weight:700; color:var(--brown, #5a3825); margin-top:4px; }
+
+        /* CARD */
+        .admin-panel {
+            background:white; border-radius:16px; box-shadow:0 2px 12px rgba(0,0,0,0.04); overflow:hidden;
+        }
+        .admin-panel-header {
+            display:flex; align-items:center; justify-content:space-between;
+            padding:1.25rem 1.5rem; border-bottom:1px solid #f3e9eb;
+        }
+        .admin-panel-header h3 {
+            font-family: var(--font, 'Playfair Display', serif); font-size:1.15rem; font-weight:700;
+            color:var(--brown, #5a3825); margin:0;
+        }
+
+        /* TABLE */
+        .admin-table-wrap { overflow-x:auto; }
+        .admin-data-table { width:100%; border-collapse:collapse; font-size:13px; }
+        .admin-data-table th {
+            text-align:left; padding:12px 1.5rem; font-size:11px; font-weight:600;
+            color:#b09098; text-transform:uppercase; letter-spacing:1px;
+            border-bottom:1px solid #f3e9eb; background:#fdfafb;
+        }
+        .admin-data-table td { padding:14px 1.5rem; border-bottom:1px solid #f6eef0; color:#5a4a4d; }
+        .admin-data-table tr:last-child td { border-bottom:none; }
+        .admin-data-table tr:hover td { background:#fffafb; }
+
+        /* BADGES */
+        .pill { display:inline-flex; align-items:center; padding:4px 12px; border-radius:50px; font-size:11px; font-weight:600; }
+        .pill-pending    { background:#fff7ed; color:#ea580c; }
+        .pill-processing { background:#eff6ff; color:#2563eb; }
+        .pill-shipped    { background:#f0f9ff; color:#0284c7; }
+        .pill-delivered  { background:#f0fdf4; color:#16a34a; }
+        .pill-cancelled  { background:#fef2f2; color:#dc2626; }
+        .pill-paid       { background:#f0fdf4; color:#16a34a; }
+        .pill-unpaid     { background:#fff0f3; color:#c94f7c; }
+
+        /* BUTTONS */
+        .abtn { display:inline-flex; align-items:center; gap:6px; padding:8px 16px; border-radius:8px; font-size:12px; font-weight:600; text-decoration:none; border:none; cursor:pointer; transition:all 0.2s; }
+        .abtn-pink { background:#c94f7c; color:white; }
+        .abtn-pink:hover { background:#b03e69; }
+        .abtn-outline { background:white; color:#c94f7c; border:1.5px solid #fbd5e0; }
+        .abtn-outline:hover { background:#fff0f3; }
+
+        @media (max-width: 900px) {
+            .admin-sidebar { display:none; }
+            .admin-main { padding:1.25rem; }
+        }
+    </style>
+    </head>
+<body>
+<div class="admin-wrapper">
+    <!-- SIDEBAR -->
+    <aside class="admin-sidebar">
+        <div class="admin-sidebar-brand">The Daily Outfit</div>
+        <div class="admin-sidebar-sub">Admin Panel</div>
+
+        <nav class="admin-nav">
+            <a href="https://thedailyoutfit-store.online/admin" class="">
+                <span class="nav-icon">📊</span> Dashboard
+            </a>
+            <a href="https://thedailyoutfit-store.online/admin/orders" class="">
+                <span class="nav-icon">📦</span> Pesanan
+            </a>
+            <a href="https://thedailyoutfit-store.online/admin/products" class="active">
+                <span class="nav-icon">👗</span> Produk
+            </a>
+        </nav>
+
+        <div class="admin-sidebar-footer">
+            <a href="https://thedailyoutfit-store.online/">
+                <span class="nav-icon">🏠</span> Lihat Toko
+            </a>
+            <form method="POST" action="https://thedailyoutfit-store.online/logout">
+                <input type="hidden" name="_token" value="ZzulH7WyJI7Wv2wM86gdmQk8tH48LX6KtU1nZafC" autocomplete="off">                <button type="submit" style="all:unset; display:flex; align-items:center; gap:12px; padding:11px 14px; border-radius:10px; color:#7a5a63; font-size:14px; font-weight:500; cursor:pointer; width:100%;" onmouseover="this.style.background=&#39;#fff0f3&#39;; this.style.color=&#39;#c94f7c&#39;" onmouseout="this.style.background=&#39;transparent&#39;; this.style.color=&#39;#7a5a63&#39;">
+                    <span class="nav-icon">🚪</span> Keluar
+                </button>
+            </form>
+        </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="admin-main">
+        
+<style>
+.edit-section {
+    background: white;
+    border-radius: 16px;
+    border: 1px solid #faeaee;
+    margin-bottom: 1.25rem;
+    overflow: hidden;
+}
+.edit-section-header {
+    padding: 14px 20px;
+    background: #fff8f9;
+    border-bottom: 1px solid #faeaee;
+    font-size: 12px;
+    font-weight: 700;
+    color: #c94f7c;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.edit-section-body { padding: 1.25rem 1.5rem; }
+.field-label {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    color: #9a8a8e;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+}
+.field-input {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1.5px solid #f0dde2;
+    border-radius: 10px;
+    font-size: 14px;
+    color: #4a3840;
+    transition: border-color 0.2s;
+    box-sizing: border-box;
+}
+.field-input:focus { outline: none; border-color: #c94f7c; }
+
+/* Combo row (size + color + stok) */
+.combo-row {
+    display: grid;
+    grid-template-columns: 90px 1fr 80px 36px;
+    gap: 8px;
+    align-items: center;
+    background: #fff8f9;
+    border: 1.5px solid #f0dde2;
+    border-radius: 10px;
+    padding: 8px 12px;
+    transition: border-color 0.2s;
+}
+.combo-row:focus-within { border-color: #c94f7c; }
+.combo-row select,
+.combo-row input {
+    border: none;
+    background: transparent;
+    font-size: 13px;
+    color: #4a3840;
+    padding: 4px 2px;
+    width: 100%;
+}
+.combo-row select:focus,
+.combo-row input:focus { outline: none; }
+.combo-row input[type=number] { text-align: center; font-weight: 600; }
+.btn-remove {
+    background: none;
+    border: none;
+    color: #e0a0b0;
+    cursor: pointer;
+    font-size: 18px;
+    line-height: 1;
+    padding: 0;
+    transition: color 0.2s;
+    text-align: center;
+}
+.btn-remove:hover { color: #dc2626; }
+.combo-header {
+    display: grid;
+    grid-template-columns: 90px 1fr 80px 36px;
+    gap: 8px;
+    padding: 0 12px;
+    margin-bottom: 6px;
+}
+.combo-header span {
+    font-size: 10px;
+    font-weight: 700;
+    color: #b09098;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.size-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    background: #fff8f9;
+    border: 1.5px solid #f0dde2;
+    border-radius: 12px;
+    padding: 12px 10px;
+    min-width: 70px;
+}
+.size-box span { font-size: 13px; font-weight: 700; color: #c94f7c; }
+.size-box input {
+    width: 52px; padding: 6px; text-align: center;
+    border: 1px solid #f0dde2; border-radius: 8px;
+    font-size: 14px; font-weight: 600; color: #4a3840; background: white;
+}
+.gen-box {
+    margin-top: 14px;
+    padding: 14px;
+    background: #fff8f9;
+    border: 1.5px dashed #f0b8c8;
+    border-radius: 10px;
+}
+.gen-box .field-label { margin-bottom: 4px; }
+.gen-box p { font-size: 11px; color: #b09098; margin: 0 0 10px; }
+.gen-mode-row {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 10px;
+    font-size: 12px;
+    color: #4a3840;
+    flex-wrap: wrap;
+}
+.gen-mode-row label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+}
+.gen-input-row {
+    display: flex;
+    gap: 8px;
+}
+.gen-input-row input[type=text] {
+    flex: 1;
+}
+.btn-generate {
+    white-space: nowrap;
+    padding: 10px 18px;
+    font-size: 12px;
+}
+</style>
+
+<div class="admin-topbar">
+    <div>
+        <h1>Edit Produk</h1>
+        <p style="color:#b09098;">Linen Blend Shirt</p>
+    </div>
+    <a href="https://thedailyoutfit-store.online/admin/products" class="abtn abtn-outline" style="padding:12px 24px;">← Kembali</a>
+</div>
+
+
+
+<form method="POST" action="https://thedailyoutfit-store.online/admin/products/1" enctype="multipart/form-data">
+<input type="hidden" name="_token" value="ZzulH7WyJI7Wv2wM86gdmQk8tH48LX6KtU1nZafC" autocomplete="off">
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:1.25rem;">
+
+    <!-- KOLOM KIRI -->
+    <div style="display:flex; flex-direction:column; gap:1.25rem;">
+
+        <!-- FOTO -->
+        <div class="edit-section">
+            <div class="edit-section-header">🖼️ Foto Produk</div>
+            <div class="edit-section-body">
+                <div style="display:flex; gap:1rem; align-items:center;">
+                    <div style="width:90px; height:90px; border-radius:12px; overflow:hidden; background:#fff0f3; display:flex; align-items:center; justify-content:center; flex-shrink:0; border:2px solid #f0dde2;">
+                                                    <img id="preview-img" src="./Edit Produk — Admin The Daily Outfit_files/cjubz6aekyftpnvvl09b.jpg" style="width:100%; height:100%; object-fit:cover;">
+                                            </div>
+                    <div style="flex:1;">
+                        <input type="file" name="image" accept="image/*" onchange="previewImage(this)" style="width:100%; padding:9px; border:1.5px dashed #f0dde2; border-radius:10px; font-size:12px; cursor:pointer; box-sizing:border-box;">
+                        <p style="font-size:11px; color:#b09098; margin-top:6px;">Kosongkan jika tidak ingin mengganti foto.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- INFO DASAR -->
+        <div class="edit-section">
+            <div class="edit-section-header">📝 Informasi Dasar</div>
+            <div class="edit-section-body" style="display:flex; flex-direction:column; gap:1rem;">
+                <div>
+                    <label class="field-label">Nama Produk</label>
+                    <input type="text" name="name" value="Linen Blend Shirt" required="" class="field-input">
+                </div>
+                <div>
+                    <label class="field-label">Kategori</label>
+                    <select name="category_id" id="category_select" onchange="toggleSection()" class="field-input" style="background:white; cursor:pointer;">
+                                                <option value="1" data-slug="tops" selected="">Tops</option>
+                                                <option value="2" data-slug="bottoms">Bottoms</option>
+                                                <option value="3" data-slug="dresses">Dresses</option>
+                                                <option value="4" data-slug="outerwear">Outerwear</option>
+                                                <option value="5" data-slug="accessories">Accessories</option>
+                                                <option value="6" data-slug="bags">Bags</option>
+                                            </select>
+                </div>
+                <div>
+                    <label class="field-label">Deskripsi</label>
+                    <textarea name="description" rows="4" class="field-input" style="resize:vertical;">Kemeja Linen Premium – Nyaman, Elegan &amp; Stylish
+
+Tampil lebih percaya diri dengan Kemeja Linen Premium yang memadukan desain modern dan bahan berkualitas. Terbuat dari material linen premium yang ringan, lembut, dan nyaman dipakai, kemeja ini cocok digunakan untuk berbagai aktivitas seperti bekerja, kuliah, hangout, hingga acara semi formal.
+
+
+Dengan potongan yang simpel dan elegan, kemeja ini mudah dipadukan dengan celana jeans, kulot, rok, maupun celana bahan sehingga memberikan tampilan yang rapi dan fashionable.
+
+
+Keunggulan Produk:
+
+✨ Bahan linen premium, lembut dan nyaman dipakai.
+🌿 Adem dan ringan, cocok untuk penggunaan sehari-hari.
+👔 Desain simpel, elegan, dan timeless.
+👗 Mudah dipadukan dengan berbagai outfit.
+💖 Cocok untuk kerja, kuliah, hangout, maupun acara semi formal.
+
+Panduan Ukuran:
+
+Ukuran	Panjang Baju	Lingkar Dada	Panjang Lengan
+S	68 cm	96 cm	56 cm
+M	70 cm	100 cm	57 cm
+L	72 cm	104 cm	58 cm
+XL	74 cm	108 cm	59 cm
+
+&gt; Catatan: Terdapat toleransi ukuran ±1–3 cm karena proses pengukuran manual.
+
+
+Catatan:
+Warna produk pada foto mungkin sedikit berbeda karena pencahayaan saat pemotretan dan pengaturan layar perangkat.
+Mohon periksa ukuran sebelum melakukan checkout agar sesuai dengan kebutuhan.
+Mohon periksa kembali pesanan sebelum checkout.
+
+Lengkapi koleksi fashion Anda dengan Kemeja Linen Premium yang nyaman dipakai, mudah dipadukan, dan cocok digunakan di berbagai kesempatan.</textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- HARGA -->
+        <div class="edit-section">
+            <div class="edit-section-header">💰 Harga</div>
+            <div class="edit-section-body">
+                <div>
+                    <label class="field-label">Harga (Rp)</label>
+                    <input type="number" name="price" min="0" value="68000.00" required="" class="field-input">
+                </div>
+                <p style="font-size:11px; color:#b09098; margin-top:8px;">Total stok dihitung otomatis dari kombinasi ukuran &amp; warna.</p>
+            </div>
+        </div>
+
+        <!-- FEATURED -->
+        <div class="edit-section">
+            <div class="edit-section-body">
+                <label style="display:flex; align-items:center; gap:10px; cursor:pointer;">
+                    <input type="checkbox" name="is_featured" value="1" checked="" style="width:16px; height:16px; accent-color:#c94f7c; cursor:pointer;">
+                    <div>
+                        <div style="font-size:13px; font-weight:600; color:var(--brown);">Tampilkan di Halaman Utama</div>
+                        <div style="font-size:11px; color:#b09098;">Produk akan muncul di bagian unggulan toko</div>
+                    </div>
+                </label>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- KOLOM KANAN -->
+    <div style="display:flex; flex-direction:column; gap:1.25rem;">
+
+        <!-- STOK KOMBINASI (BAJU) -->
+        <div class="edit-section" id="section-clothing" style="display: block;">
+            <div class="edit-section-header">📐 Stok per Ukuran &amp; Warna</div>
+            <div class="edit-section-body">
+                <p style="font-size:12px; color:#b09098; margin-bottom:12px;">
+                    Setiap baris = 1 kombinasi ukuran + warna. Stok total dihitung otomatis.
+                </p>
+
+                <div class="combo-header">
+                    <span>Ukuran</span>
+                    <span>Warna</span>
+                    <span style="text-align:center;">Stok</span>
+                    <span></span>
+                </div>
+
+                <div id="combo-rows" style="display:flex; flex-direction:column; gap:8px; margin-bottom:10px;">
+                                                            <div class="combo-row">
+                        <select name="combo_size[]">
+                            <option value="">-</option>
+                                                        <option value="S" selected="">S</option>
+                                                        <option value="M">M</option>
+                                                        <option value="L">L</option>
+                                                        <option value="XL">XL</option>
+                                                        <option value="XXL">XXL</option>
+                                                        <option value="All Size">All Size</option>
+                                                    </select>
+                        <input type="text" name="combo_color[]" value="Hitam" placeholder="cth: Dusty Pink">
+                        <input type="number" name="combo_stock[]" value="9" min="0" placeholder="0">
+                        <button type="button" onclick="this.closest(&#39;.combo-row&#39;).remove()" class="btn-remove">×</button>
+                    </div>
+                                        <div class="combo-row">
+                        <select name="combo_size[]">
+                            <option value="">-</option>
+                                                        <option value="S" selected="">S</option>
+                                                        <option value="M">M</option>
+                                                        <option value="L">L</option>
+                                                        <option value="XL">XL</option>
+                                                        <option value="XXL">XXL</option>
+                                                        <option value="All Size">All Size</option>
+                                                    </select>
+                        <input type="text" name="combo_color[]" value="Putih" placeholder="cth: Dusty Pink">
+                        <input type="number" name="combo_stock[]" value="10" min="0" placeholder="0">
+                        <button type="button" onclick="this.closest(&#39;.combo-row&#39;).remove()" class="btn-remove">×</button>
+                    </div>
+                                        <div class="combo-row">
+                        <select name="combo_size[]">
+                            <option value="">-</option>
+                                                        <option value="S" selected="">S</option>
+                                                        <option value="M">M</option>
+                                                        <option value="L">L</option>
+                                                        <option value="XL">XL</option>
+                                                        <option value="XXL">XXL</option>
+                                                        <option value="All Size">All Size</option>
+                                                    </select>
+                        <input type="text" name="combo_color[]" value="Navy" placeholder="cth: Dusty Pink">
+                        <input type="number" name="combo_stock[]" value="10" min="0" placeholder="0">
+                        <button type="button" onclick="this.closest(&#39;.combo-row&#39;).remove()" class="btn-remove">×</button>
+                    </div>
+                                        <div class="combo-row">
+                        <select name="combo_size[]">
+                            <option value="">-</option>
+                                                        <option value="S" selected="">S</option>
+                                                        <option value="M">M</option>
+                                                        <option value="L">L</option>
+                                                        <option value="XL">XL</option>
+                                                        <option value="XXL">XXL</option>
+                                                        <option value="All Size">All Size</option>
+                                                    </select>
+                        <input type="text" name="combo_color[]" value="Sage Green" placeholder="cth: Dusty Pink">
+                        <input type="number" name="combo_stock[]" value="10" min="0" placeholder="0">
+                        <button type="button" onclick="this.closest(&#39;.combo-row&#39;).remove()" class="btn-remove">×</button>
+                    </div>
+                                        <div class="combo-row">
+                        <select name="combo_size[]">
+                            <option value="">-</option>
+                                                        <option value="S">S</option>
+                                                        <option value="M" selected="">M</option>
+                                                        <option value="L">L</option>
+                                                        <option value="XL">XL</option>
+                                                        <option value="XXL">XXL</option>
+                                                        <option value="All Size">All Size</option>
+                                                    </select>
+                        <input type="text" name="combo_color[]" value="Hitam" placeholder="cth: Dusty Pink">
+                        <input type="number" name="combo_stock[]" value="10" min="0" placeholder="0">
+                        <button type="button" onclick="this.closest(&#39;.combo-row&#39;).remove()" class="btn-remove">×</button>
+                    </div>
+                                        <div class="combo-row">
+                        <select name="combo_size[]">
+                            <option value="">-</option>
+                                                        <option value="S">S</option>
+                                                        <option value="M" selected="">M</option>
+                                                        <option value="L">L</option>
+                                                        <option value="XL">XL</option>
+                                                        <option value="XXL">XXL</option>
+                                                        <option value="All Size">All Size</option>
+                                                    </select>
+                        <input type="text" name="combo_color[]" value="Putih" placeholder="cth: Dusty Pink">
+                        <input type="number" name="combo_stock[]" value="10" min="0" placeholder="0">
+                        <button type="button" onclick="this.closest(&#39;.combo-row&#39;).remove()" class="btn-remove">×</button>
+                    </div>
+                                        <div class="combo-row">
+                        <select name="combo_size[]">
+                            <option value="">-</option>
+                                                        <option value="S">S</option>
+                                                        <option value="M" selected="">M</option>
+                                                        <option value="L">L</option>
+                                                        <option value="XL">XL</option>
+                                                        <option value="XXL">XXL</option>
+                                                        <option value="All Size">All Size</option>
+                                                    </select>
+                        <input type="text" name="combo_color[]" value="Navy" placeholder="cth: Dusty Pink">
+                        <input type="number" name="combo_stock[]" value="10" min="0" placeholder="0">
+                        <button type="button" onclick="this.closest(&#39;.combo-row&#39;).remove()" class="btn-remove">×</button>
+                    </div>
+                                        <div class="combo-row">
+                        <select name="combo_size[]">
+                            <option value="">-</option>
+                                                        <option value="S">S</option>
+                                                        <option value="M" selected="">M</option>
+                                                        <option value="L">L</option>
+                                                        <option value="XL">XL</option>
+                                                        <option value="XXL">XXL</option>
+                                                        <option value="All Size">All Size</option>
+                                                    </select>
+                        <input type="text" name="combo_color[]" value="Sage Green" placeholder="cth: Dusty Pink">
+                        <input type="number" name="combo_stock[]" value="10" min="0" placeholder="0">
+                        <button type="button" onclick="this.closest(&#39;.combo-row&#39;).remove()" class="btn-remove">×</button>
+                    </div>
+                                        <div class="combo-row">
+                        <select name="combo_size[]">
+                            <option value="">-</option>
+                                                        <option value="S">S</option>
+                                                        <option value="M">M</option>
+                                                        <option value="L" selected="">L</option>
+                                                        <option value="XL">XL</option>
+                                                        <option value="XXL">XXL</option>
+                                                        <option value="All Size">All Size</option>
+                                                    </select>
+                        <input type="text" name="combo_color[]" value="Hitam" placeholder="cth: Dusty Pink">
+                        <input type="number" name="combo_stock[]" value="10" min="0" placeholder="0">
+                        <button type="button" onclick="this.closest(&#39;.combo-row&#39;).remove()" class="btn-remove">×</button>
+                    </div>
+                                        <div class="combo-row">
+                        <select name="combo_size[]">
+                            <option value="">-</option>
+                                                        <option value="S">S</option>
+                                                        <option value="M">M</option>
+                                                        <option value="L" selected="">L</option>
+                                                        <option value="XL">XL</option>
+                                                        <option value="XXL">XXL</option>
+                                                        <option value="All Size">All Size</option>
+                                                    </select>
+                        <input type="text" name="combo_color[]" value="Putih" placeholder="cth: Dusty Pink">
+                        <input type="number" name="combo_stock[]" value="10" min="0" placeholder="0">
+                        <button type="button" onclick="this.closest(&#39;.combo-row&#39;).remove()" class="btn-remove">×</button>
+                    </div>
+                                        <div class="combo-row">
+                        <select name="combo_size[]">
+                            <option value="">-</option>
+                                                        <option value="S">S</option>
+                                                        <option value="M">M</option>
+                                                        <option value="L" selected="">L</option>
+                                                        <option value="XL">XL</option>
+                                                        <option value="XXL">XXL</option>
+                                                        <option value="All Size">All Size</option>
+                                                    </select>
+                        <input type="text" name="combo_color[]" value="Navy" placeholder="cth: Dusty Pink">
+                        <input type="number" name="combo_stock[]" value="10" min="0" placeholder="0">
+                        <button type="button" onclick="this.closest(&#39;.combo-row&#39;).remove()" class="btn-remove">×</button>
+                    </div>
+                                        <div class="combo-row">
+                        <select name="combo_size[]">
+                            <option value="">-</option>
+                                                        <option value="S">S</option>
+                                                        <option value="M">M</option>
+                                                        <option value="L" selected="">L</option>
+                                                        <option value="XL">XL</option>
+                                                        <option value="XXL">XXL</option>
+                                                        <option value="All Size">All Size</option>
+                                                    </select>
+                        <input type="text" name="combo_color[]" value="Sage Green" placeholder="cth: Dusty Pink">
+                        <input type="number" name="combo_stock[]" value="10" min="0" placeholder="0">
+                        <button type="button" onclick="this.closest(&#39;.combo-row&#39;).remove()" class="btn-remove">×</button>
+                    </div>
+                                        <div class="combo-row">
+                        <select name="combo_size[]">
+                            <option value="">-</option>
+                                                        <option value="S">S</option>
+                                                        <option value="M">M</option>
+                                                        <option value="L">L</option>
+                                                        <option value="XL" selected="">XL</option>
+                                                        <option value="XXL">XXL</option>
+                                                        <option value="All Size">All Size</option>
+                                                    </select>
+                        <input type="text" name="combo_color[]" value="Hitam" placeholder="cth: Dusty Pink">
+                        <input type="number" name="combo_stock[]" value="10" min="0" placeholder="0">
+                        <button type="button" onclick="this.closest(&#39;.combo-row&#39;).remove()" class="btn-remove">×</button>
+                    </div>
+                                        <div class="combo-row">
+                        <select name="combo_size[]">
+                            <option value="">-</option>
+                                                        <option value="S">S</option>
+                                                        <option value="M">M</option>
+                                                        <option value="L">L</option>
+                                                        <option value="XL" selected="">XL</option>
+                                                        <option value="XXL">XXL</option>
+                                                        <option value="All Size">All Size</option>
+                                                    </select>
+                        <input type="text" name="combo_color[]" value="Putih" placeholder="cth: Dusty Pink">
+                        <input type="number" name="combo_stock[]" value="10" min="0" placeholder="0">
+                        <button type="button" onclick="this.closest(&#39;.combo-row&#39;).remove()" class="btn-remove">×</button>
+                    </div>
+                                        <div class="combo-row">
+                        <select name="combo_size[]">
+                            <option value="">-</option>
+                                                        <option value="S">S</option>
+                                                        <option value="M">M</option>
+                                                        <option value="L">L</option>
+                                                        <option value="XL" selected="">XL</option>
+                                                        <option value="XXL">XXL</option>
+                                                        <option value="All Size">All Size</option>
+                                                    </select>
+                        <input type="text" name="combo_color[]" value="Navy" placeholder="cth: Dusty Pink">
+                        <input type="number" name="combo_stock[]" value="10" min="0" placeholder="0">
+                        <button type="button" onclick="this.closest(&#39;.combo-row&#39;).remove()" class="btn-remove">×</button>
+                    </div>
+                                        <div class="combo-row">
+                        <select name="combo_size[]">
+                            <option value="">-</option>
+                                                        <option value="S">S</option>
+                                                        <option value="M">M</option>
+                                                        <option value="L">L</option>
+                                                        <option value="XL" selected="">XL</option>
+                                                        <option value="XXL">XXL</option>
+                                                        <option value="All Size">All Size</option>
+                                                    </select>
+                        <input type="text" name="combo_color[]" value="Sage Green" placeholder="cth: Dusty Pink">
+                        <input type="number" name="combo_stock[]" value="10" min="0" placeholder="0">
+                        <button type="button" onclick="this.closest(&#39;.combo-row&#39;).remove()" class="btn-remove">×</button>
+                    </div>
+                                    </div>
+
+                <div style="display:flex; gap:8px;">
+                    <button type="button" onclick="addComboRow()" class="abtn abtn-outline" style="padding:7px 14px; font-size:12px; flex:1;">
+                        + Tambah Kombinasi
+                    </button>
+                    <button type="button" onclick="fillAllSizes()" class="abtn abtn-outline" style="padding:7px 14px; font-size:12px; flex:1;">
+                        ⚡ Isi Semua Ukuran (S,M,L,XL)
+                    </button>
+                </div>
+
+                <!-- GENERATE OTOMATIS: UKURAN x WARNA -->
+                <div class="gen-box">
+                    <label class="field-label">Generate Otomatis: Ukuran × Warna</label>
+                    <p>Tulis daftar warna dipisah koma, lalu klik generate.</p>
+                    <div class="gen-mode-row">
+                        <label>
+                            <input type="radio" name="gen_size_mode" value="multi" checked=""> Ukuran S, M, L, XL
+                        </label>
+                        <label>
+                            <input type="radio" name="gen_size_mode" value="all"> All Size (1 ukuran saja)
+                        </label>
+                    </div>
+                    <div class="gen-input-row">
+                        <input type="text" id="gen_colors_input" class="field-input" placeholder="cth: Dusty Pink, Hitam, Navy">
+                        <button type="button" onclick="generateCombinations()" class="abtn abtn-pink btn-generate">⚡ Generate Semua Kombinasi</button>
+                    </div>
+                </div>
+
+                <div style="margin-top:14px; padding:10px 14px; background:#fff0f3; border-radius:8px; font-size:12px; color:#c94f7c;">
+                    💡 <strong>Contoh:</strong> pilih "S,M,L,XL" + isi "Dusty Pink, Hitam, Navy" → 12 baris. Pilih "All Size" + warna yang sama → 3 baris (All Size + tiap warna). Tinggal isi stok masing-masing.
+                </div>
+            </div>
+        </div>
+
+        <!-- AKSESORIS -->
+        <div class="edit-section" id="section-accessories" style="display:none;">
+            <div class="edit-section-header">✨ Stok Aksesoris</div>
+            <div class="edit-section-body">
+                
+                <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:13px; font-weight:600; color:var(--brown); margin-bottom:14px;">
+                    <input type="checkbox" id="edit_has_variants" name="accessory_has_variants" value="1" onchange="toggleEditAccessoryMode()">
+                    Aktifkan Varian Warna (misal: Gold / Silver / Rose Gold)
+                </label>
+
+                <!-- MODE: FIX PINK -->
+                <div id="edit-accessory-fixed" style="">
+                                        <label class="field-label">Jumlah Stok (Warna: Pink)</label>
+                    <input type="number" name="accessory_stock" value="0" min="0" class="field-input" style="max-width:160px;">
+                    <p style="font-size:11px; color:#b09098; margin-top:10px;">Produk ini tidak punya pilihan varian warna lain — fix Pink.</p>
+                </div>
+
+                <!-- MODE: VARIAN -->
+                <div id="edit-accessory-variants" style="display:none;">
+                    <div style="display:flex; gap:12px; flex-wrap:wrap;">
+                                                                        <div class="size-box">
+                            <span style="font-size:11px;">Gold</span>
+                            <input type="number" name="variant_Gold" value="0" min="0">
+                        </div>
+                                                                        <div class="size-box">
+                            <span style="font-size:11px;">Silver</span>
+                            <input type="number" name="variant_Silver" value="0" min="0">
+                        </div>
+                                                                        <div class="size-box">
+                            <span style="font-size:11px;">Rose Gold</span>
+                            <input type="number" name="variant_Rose_Gold" value="0" min="0">
+                        </div>
+                                            </div>
+                    <p style="font-size:11px; color:#b09098; margin-top:10px;">Isi 0 jika varian tidak tersedia.</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- TOMBOL AKSI -->
+<div style="display:flex; gap:10px; margin-top:1.25rem; justify-content:flex-end;">
+    <a href="https://thedailyoutfit-store.online/admin/products" class="abtn abtn-outline" style="padding:12px 28px;">Batal</a>
+    <button type="submit" class="abtn abtn-pink" style="padding:12px 32px;">💾 Simpan Perubahan</button>
+</div>
+
+</form>
+
+<script>
+function previewImage(input) {
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const img = document.getElementById('preview-img');
+            const text = document.getElementById('preview-text');
+            img.src = e.target.result;
+            img.style.display = 'block';
+            if (text) text.style.display = 'none';
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+function comboRowHtml(size, color, stock) {
+    size = size || '';
+    color = color || '';
+    stock = stock || 0;
+    const sizes = ['S','M','L','XL','XXL','All Size'];
+    let options = '<option value="">-</option>';
+    sizes.forEach(sz => {
+        options += `<option value="${sz}" ${sz === size ? 'selected' : ''}>${sz}</option>`;
+    });
+    return `
+        <select name="combo_size[]">${options}</select>
+        <input type="text" name="combo_color[]" value="${color}" placeholder="cth: Dusty Pink">
+        <input type="number" name="combo_stock[]" value="${stock}" min="0" placeholder="0">
+        <button type="button" onclick="this.closest('.combo-row').remove()" class="btn-remove">×</button>
+    `;
+}
+
+function addComboRow(size = '', color = '', stock = 0) {
+    const container = document.getElementById('combo-rows');
+    const row = document.createElement('div');
+    row.className = 'combo-row';
+    row.innerHTML = comboRowHtml(size, color, stock);
+    container.appendChild(row);
+    return row;
+}
+
+function fillAllSizes() {
+    const color = prompt('Warna untuk kombinasi S, M, L, XL:', '');
+    if (color === null) return;
+    const trimmed = color.trim();
+    if (!trimmed) {
+        alert('Isi dulu nama warnanya.');
+        return;
+    }
+    ['S', 'M', 'L', 'XL'].forEach(sz => addComboRow(sz, trimmed, 0));
+}
+
+function generateCombinations() {
+    const colorsRaw = document.getElementById('gen_colors_input').value;
+    const colors = colorsRaw.split(',').map(c => c.trim()).filter(c => c.length > 0);
+    if (colors.length === 0) {
+        alert('Isi dulu daftar warnanya, pisahkan dengan koma.');
+        return;
+    }
+
+    const mode = document.querySelector('input[name="gen_size_mode"]:checked').value;
+    const sizes = mode === 'all' ? ['All Size'] : ['S', 'M', 'L', 'XL'];
+
+    sizes.forEach(size => {
+        colors.forEach(color => addComboRow(size, color, 0));
+    });
+
+    document.getElementById('gen_colors_input').value = '';
+}
+
+function toggleSection() {
+    const select = document.getElementById('category_select');
+    const selected = select.options[select.selectedIndex];
+    const slug = selected.getAttribute('data-slug');
+    const isAccessory = slug === 'accessories';
+    document.getElementById('section-clothing').style.display = isAccessory ? 'none' : 'block';
+    document.getElementById('section-accessories').style.display = isAccessory ? 'block' : 'none';
+}
+
+function toggleEditAccessoryMode() {
+    const checked = document.getElementById('edit_has_variants').checked;
+    document.getElementById('edit-accessory-fixed').style.display = checked ? 'none' : 'block';
+    document.getElementById('edit-accessory-variants').style.display = checked ? 'block' : 'none';
+}
+
+toggleSection();
+</script>
+
+    </main>
+</div>
+
+
+</body></html>

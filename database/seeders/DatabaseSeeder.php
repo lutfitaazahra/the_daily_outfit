@@ -15,7 +15,7 @@ class DatabaseSeeder extends Seeder
             [
                 'name'       => 'Admin TDO',
                 'email'      => 'admin@dailyoutfit.com',
-                'password'   => Hash::make('password'),
+                'password'   => Hash::make('Admin123!'),
                 'role'       => 'admin',
                 'created_at' => now(),
                 'updated_at' => now(),

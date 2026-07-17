@@ -78,7 +78,7 @@
         'olive'=>'#6b7c3a','olive green'=>'#6b7c3a','tosca'=>'#2dd4bf','beige'=>'#e8d5b7',
         'oat cream'=>'#f5ede0','harbor green'=>'#4a7c6f','sky blue'=>'#7dd3fc',
         'lilac'=>'#c4b5fd','charcoal'=>'#374151','emerald green'=>'#059669',
-        'dusty blue'=>'#7096a8','ash blue'=>'#8fa3b1','ocean blue'=>'#0369a1',
+        'dusty blue'=>'#7096a8','ash blue'=>'#8fa3b1','ocean blue'=>'#0369a1','sea blue'=>'#1e6b8a',
         'dusty yellow'=>'#f0d060','atlantic sea'=>'#1e6b8a','rose gold'=>'#b76e79',
         'gold'=>'#d4a017','silver'=>'#c0c0c0','butter yellow'=>'#f5d060',
         'butteryellow'=>'#f5d060','mahogany'=>'#c04000','biru denim'=>'#1560bd',
