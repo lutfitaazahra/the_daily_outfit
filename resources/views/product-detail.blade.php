@@ -305,6 +305,18 @@ input[type="radio"]:checked + .color-option span:first-child {
 const stockMap = @json($stockMap);
 const allVariants = @json($allVariants->map(fn($v) => ['size' => $v->size, 'color' => $v->color, 'stock' => $v->stock])->values());
 
+function changeQty(delta) {
+    const qtyInput = document.getElementById('qty');
+    if (!qtyInput) return;
+    let val = parseInt(qtyInput.value) || 1;
+    const max = parseInt(qtyInput.max) || 99;
+    const min = parseInt(qtyInput.min) || 1;
+    val += delta;
+    if (val < min) val = min;
+    if (val > max) val = max;
+    qtyInput.value = val;
+}
+
 function getSelectedSize() {
     const checked = document.querySelector('input[name="size"]:checked');
     return checked ? checked.value : '';
