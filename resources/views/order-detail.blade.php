@@ -115,6 +115,17 @@
     } else {
         $badge = ['📦 ' . ucwords($order->status), 'badge-processing'];
     }
+
+    // Kondisi tombol Ajukan Retur:
+    // - status pesanan sudah Selesai/Delivered
+    // - sudah Lunas
+    // - metode pembayaran BUKAN COD
+    // - belum pernah ajukan retur sebelumnya
+    $isDelivered  = in_array($dbStatus, ['selesai', 'delivered']);
+    $isPaid       = $order->payment_status === 'paid';
+    $isNotCod     = strtolower(trim($order->payment_method)) !== 'cod';
+    $hasReturn    = method_exists($order, 'returnRequest') ? $order->returnRequest()->exists() : false;
+    $canRequestReturn = $isDelivered && $isPaid && $isNotCod && !$hasReturn;
     @endphp
 
     <div class="od-header">
@@ -127,6 +138,9 @@
             <span class="badge {{ $order->payment_status === 'paid' ? 'badge-paid' : ($order->payment_status === 'refunded' ? 'badge-refunded' : 'badge-unpaid') }}">
                 {{ $order->payment_status === 'paid' ? '💳 Lunas' : ($order->payment_status === 'refunded' ? '↩️ Direfund' : '⚠️ Belum Bayar') }}
             </span>
+            @if($hasReturn)
+            <span class="badge badge-returned">↩️ Retur Diajukan</span>
+            @endif
         </div>
     </div>
 
@@ -251,6 +265,12 @@
         @if($order->payment_status === 'unpaid' && !in_array($dbStatus, ['cancelled', 'batal']))
         <a href="{{ route('payment', $order->id) }}" class="btn btn-primary" style="flex:1; justify-content:center;">
             💳 Bayar Sekarang
+        </a>
+        @endif
+
+        @if($canRequestReturn)
+        <a href="{{ route('returns.create', $order->id) }}" class="btn btn-outline" style="flex:1; justify-content:center;">
+            ↩️ Ajukan Retur
         </a>
         @endif
 
