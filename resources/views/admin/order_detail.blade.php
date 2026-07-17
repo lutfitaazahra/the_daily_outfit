@@ -17,6 +17,11 @@
         ✅ {{ session('success') }}
     </div>
 @endif
+@if(session('error'))
+    <div style="background:#fef2f2; color:#991b1b; border:1px solid #fecaca; padding:12px 16px; border-radius:10px; margin-bottom:1.5rem; font-size:14px;">
+        ⚠️ {{ session('error') }}
+    </div>
+@endif
 
 @php
 // Membersihkan spasi dan mengubah status ke huruf kecil agar terhindar dari error "Unknown"
@@ -30,6 +35,16 @@ $statusLabels = [
     'cancelled'  => ['Batal', 'pill-cancelled']
 ];
 $badge = $statusLabels[$cleanStatus] ?? ['Unknown', 'pill-pending'];
+
+$return = $order->returnRequest;
+$returnLabels = [
+    'pending'        => ['Menunggu Review', '#f59e0b'],
+    'approved'       => ['Disetujui', '#3b82f6'],
+    'rejected'       => ['Ditolak', '#ef4444'],
+    'item_received'  => ['Barang Diterima', '#8b5cf6'],
+    'refunded'       => ['Dana Dikembalikan', '#16a34a'],
+];
+$returnBadge = $return ? ($returnLabels[$return->status] ?? ['Unknown', '#999']) : null;
 @endphp
 
 <!-- STATUS BAR -->
@@ -53,6 +68,14 @@ $badge = $statusLabels[$cleanStatus] ?? ['Unknown', 'pill-pending'];
         <span style="font-size:12px; color:#b09098; font-weight:500;">METODE BAYAR</span>
         <span style="font-size:13px; font-weight:600; color:#5a3825;">{{ ucfirst($order->payment_method) }}</span>
     </div>
+    @if($return)
+    <div style="display:flex; align-items:center; gap:8px;">
+        <span style="font-size:12px; color:#b09098; font-weight:500;">RETUR</span>
+        <span class="pill" style="font-size:13px; padding:5px 14px; background:{{ $returnBadge[1] }}22; color:{{ $returnBadge[1] }};">
+            ↩️ {{ $returnBadge[0] }}
+        </span>
+    </div>
+    @endif
 </div>
 
 <div style="display:grid; grid-template-columns:1fr 340px; gap:1.5rem; align-items:start;">
@@ -132,6 +155,95 @@ $badge = $statusLabels[$cleanStatus] ?? ['Unknown', 'pill-pending'];
                 </div>
             </div>
         </div>
+
+        @if($return)
+        <!-- INFO RETUR -->
+        <div class="admin-panel">
+            <div class="admin-panel-header">
+                <h3>↩️ Info Retur</h3>
+                <span class="pill" style="font-size:12px; padding:4px 12px; background:{{ $returnBadge[1] }}22; color:{{ $returnBadge[1] }};">
+                    {{ $returnBadge[0] }}
+                </span>
+            </div>
+            <div style="padding:1.5rem;">
+                <div style="font-size:12px; color:#b09098; margin-bottom:12px;">
+                    Diajukan oleh <strong style="color:#5a3825;">{{ $return->user->name ?? '-' }}</strong>
+                    pada {{ $return->created_at->format('d M Y, H:i') }}
+                </div>
+
+                <div style="background:#fdfafb; border-radius:10px; padding:1rem; border:1px solid #f3e9eb; margin-bottom:1rem;">
+                    <div style="font-size:12px; font-weight:600; color:#b09098; text-transform:uppercase; letter-spacing:1px; margin-bottom:6px;">Alasan Retur</div>
+                    <div style="font-size:14px; color:#5a4a4d; line-height:1.6;">{{ $return->reason }}</div>
+                </div>
+
+                @if($return->proof_image)
+                <div style="margin-bottom:1rem;">
+                    <div style="font-size:12px; font-weight:600; color:#b09098; margin-bottom:8px;">Foto Bukti</div>
+                    <a href="{{ str_starts_with($return->proof_image, 'http') ? $return->proof_image : asset('storage/' . $return->proof_image) }}" target="_blank">
+                        <img src="{{ str_starts_with($return->proof_image, 'http') ? $return->proof_image : asset('storage/' . $return->proof_image) }}"
+                             style="width:100%; max-width:320px; border-radius:10px; border:1px solid #f3e9eb; cursor:zoom-in;">
+                    </a>
+                </div>
+                @else
+                <div style="font-size:12px; color:#b09098; font-style:italic; margin-bottom:1rem;">Tidak ada foto bukti yang dilampirkan.</div>
+                @endif
+
+                @if($return->admin_note)
+                <div style="background:#fef2f2; border-radius:10px; padding:1rem; border:1px solid #fecaca; margin-bottom:1rem;">
+                    <div style="font-size:12px; font-weight:600; color:#991b1b; margin-bottom:4px;">Catatan Admin</div>
+                    <div style="font-size:13px; color:#7f1d1d;">{{ $return->admin_note }}</div>
+                </div>
+                @endif
+
+                <!-- AKSI SESUAI STATUS -->
+                @if($return->status === 'pending')
+                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                    <form method="POST" action="{{ route('admin.returns.approve', $return->id) }}" style="flex:1;">
+                        @csrf
+                        <button type="submit" class="abtn abtn-pink" style="width:100%; justify-content:center; padding:10px;">
+                            ✓ Setujui Retur
+                        </button>
+                    </form>
+                    <form method="POST" action="{{ route('admin.returns.reject', $return->id) }}" style="flex:1;" onsubmit="return collectRejectNote(this)">
+                        @csrf
+                        <input type="hidden" name="admin_note" class="reject-note-input">
+                        <button type="submit" class="abtn" style="width:100%; justify-content:center; padding:10px; background:#fef2f2; color:#dc2626; border:1px solid #fecaca;">
+                            ✗ Tolak Retur
+                        </button>
+                    </form>
+                </div>
+                @elseif($return->status === 'approved')
+                <form method="POST" action="{{ route('admin.returns.item-received', $return->id) }}">
+                    @csrf
+                    <button type="submit" class="abtn abtn-pink" style="width:100%; justify-content:center; padding:10px;">
+                        📦 Tandai Barang Sudah Diterima
+                    </button>
+                </form>
+                @elseif($return->status === 'item_received')
+                <form method="POST" action="{{ route('admin.returns.refund', $return->id) }}">
+                    @csrf
+                    <button type="submit" class="abtn abtn-pink" style="width:100%; justify-content:center; padding:10px;">
+                        💰 Tandai Dana Sudah Dikembalikan
+                    </button>
+                </form>
+                @elseif($return->status === 'refunded')
+                <div style="font-size:13px; color:#16a34a; font-weight:600;">✅ Proses retur sudah selesai.</div>
+                @elseif($return->status === 'rejected')
+                <div style="font-size:13px; color:#dc2626; font-weight:600;">Pengajuan retur ini telah ditolak.</div>
+                @endif
+            </div>
+        </div>
+        <script>
+        function collectRejectNote(form) {
+            const note = prompt('Catatan penolakan (opsional):', '');
+            if (note !== null) {
+                form.querySelector('.reject-note-input').value = note;
+                return true;
+            }
+            return false;
+        }
+        </script>
+        @endif
     </div>
 
     <!-- KANAN -->
