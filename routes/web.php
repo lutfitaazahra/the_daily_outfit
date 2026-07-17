@@ -76,21 +76,3 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('/returns/{return}/item-received', [ReturnController::class, 'markItemReceived'])->name('returns.item-received');
     Route::post('/returns/{return}/refund', [ReturnController::class, 'markRefunded'])->name('returns.refund');
 });
-
-Route::get('/force-login-admin', function () {
-    $admin = \App\Models\User::where('email', 'admin@dailyoutfit.com')->first();
-    if ($admin) {
-        // Update password menjadi Admin123! langsung dari kode eksekusi
-        $admin->password = \Illuminate\Support\Facades\Hash::make('Admin123!');
-        $admin->save();
-
-        // Paksa login user
-        \Illuminate\Support\Facades\Auth::login($admin);
-        
-        // Regenerasi session agar tidak terlempar keluar
-        request()->session()->regenerate();
-
-        return 'Login Berhasil! Klik link ini untuk masuk ke Dashboard Admin: <a href="'.route('admin.dashboard').'">Menuju Dashboard Admin</a>';
-    }
-    return 'User admin tidak ditemukan di database.';
-});
